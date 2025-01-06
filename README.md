@@ -45,7 +45,6 @@ namespace GowtuApp
 
     public class Game : GameBehaviour
     {
-        private GameObject camera;
         private GameObject light;
         private GameObject skybox;
         private GameObject plane;
