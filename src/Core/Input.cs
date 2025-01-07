@@ -179,6 +179,11 @@ namespace Gowtu
         {
             mouse.SetCursor(visible);
         }
+
+        public static bool IsCursorVisible()
+        {
+            return mouse.IsCursorVisible();
+        }
     }
 
     [System.Serializable]

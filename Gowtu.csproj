@@ -30,14 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources/Shaders/DiffuseV.glsl"/>
-    <EmbeddedResource Include="Resources/Shaders/DiffuseF.glsl"/>
-    <EmbeddedResource Include="Resources/Shaders/SkyboxV.glsl"/>
-    <EmbeddedResource Include="Resources/Shaders/SkyboxF.glsl"/>
-    <EmbeddedResource Include="Resources/Shaders/TerrainF.glsl"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="**/test/**"/>
     <Compile Remove="**/test/**"/>
     <EmbeddedResource Remove="**/test/**"/>

@@ -7,6 +7,7 @@ A simple library for game development. I initially made it to showcase the capab
 - UI rendering with Dear ImGui.
 - Directional and point lights.
 - Immediate mode custom 2D shape rendering with your own shaders.
+- Font rendering.
 - Frustum culling.
 - Mouse picking.
 - Advanced audio system with full support for spatialization.

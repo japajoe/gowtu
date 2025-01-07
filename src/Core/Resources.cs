@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL;
@@ -37,16 +36,15 @@ namespace Gowtu
         private static Dictionary<string,Texture2D> textures = new Dictionary<string, Texture2D>();
         private static Dictionary<string,Mesh> meshes = new Dictionary<string, Mesh>();
         private static Dictionary<string,UniformBufferObject> uniformBuffers = new Dictionary<string, UniformBufferObject>();
-        private static Assembly assembly = Assembly.GetExecutingAssembly();
         private static ConcurrentQueue<Resource> resourceQueue = new ConcurrentQueue<Resource>();
 
         internal static void LoadDefault()
         {
             AddTexture("Default", new Texture2D(2, 2, Color.White));
             
-            var diffuseShader = CreateShader("Diffuse", "DiffuseV.glsl", "DiffuseF.glsl");
-            var skyboxShader = CreateShader("Skybox", "SkyboxV.glsl", "SkyboxF.glsl");
-            var terrainShader = CreateShader("Terrain", "DiffuseV.glsl", "TerrainF.glsl");
+            var diffuseShader = CreateShader("Diffuse", DiffuseShader.vertexSource, DiffuseShader.fragmentSource);
+            var skyboxShader = CreateShader("Skybox", SkyboxShader.vertexSource, SkyboxShader.fragmentSource);
+            var terrainShader = CreateShader("Terrain", DiffuseShader.vertexSource, TerrainShader.fragmentSource);
 
             AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
             AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
@@ -69,20 +67,9 @@ namespace Gowtu
             uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, "World");
         }
 
-        private static Shader CreateShader(string name, string vertexPath, string fragmentPath)
+        private static Shader CreateShader(string name, string vertexSource, string fragmentSource)
         {
-            string pathPrefix = "Gowtu.Resources.Shaders.";
-
-            vertexPath = pathPrefix + vertexPath;
-            fragmentPath = pathPrefix + fragmentPath;
-
-            if(!Resources.LoadStringFromResource(vertexPath, out string v))
-                return null;
-
-            if(!Resources.LoadStringFromResource(fragmentPath, out string f))
-                return null;
-
-            return AddShader(name, new Shader(v, f));
+            return AddShader(name, new Shader(vertexSource, fragmentSource));
         }
 
         public static Shader AddShader(string name, Shader shader)
@@ -264,32 +251,6 @@ namespace Gowtu
                 ubo.Delete();
                 uniformBuffers.Remove(name);
             }
-        }
-
-        public static bool LoadStringFromResource(string resourceName, out string content)
-        {
-            content = string.Empty;
-            
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                if (stream != null)
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        content = reader.ReadToEnd();
-                        return true;
-                    }
-                }
-                else
-                {
-                    return false; // Resource not found
-                }
-            }
-        }
-
-        public static string[] GetAllResourceNames()
-        {
-            return assembly.GetManifestResourceNames();
         }
 
         internal static void NewFrame()

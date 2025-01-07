@@ -87,6 +87,7 @@ namespace Gowtu
         private float windowPositionY;
         private double repeatDelay;
         private double repeatInterval;
+        private bool cursorVisible;
 
         public Mouse()
         {
@@ -101,6 +102,8 @@ namespace Gowtu
             scrollY = 0.0f;
             windowPositionX = 0.0f;
             windowPositionY = 0.0f;
+
+            cursorVisible = true;
 
             states = new Dictionary<ButtonCode, ButtonState>();
 
@@ -187,6 +190,11 @@ namespace Gowtu
             scrollY = 0.0f;
         }
 
+        public bool IsCursorVisible()
+        {
+            return cursorVisible;
+        }
+
         public void SetPosition(double x, double y) 
         {
             float prevX = positionX;
@@ -239,6 +247,7 @@ namespace Gowtu
         public void SetCursor(bool visible)
         {
             GLFW.SetInputMode(Application.NativeWindow, GLFW.CURSOR, visible ? GLFW.CURSOR_NORMAL : GLFW.CURSOR_DISABLED);
+            cursorVisible = visible;
         }
 
         public bool GetState(ButtonCode button)

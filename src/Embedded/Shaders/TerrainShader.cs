@@ -1,4 +1,8 @@
-#version 330 core
+namespace Gowtu
+{
+    public static class TerrainShader
+    {
+        public static readonly string fragmentSource = @"#version 330 core
 
 uniform vec4 uDiffuseColor;
 uniform float uAmbientStrength;
@@ -139,4 +143,6 @@ void main() {
     }
 
     FragColor = gamma_correction(vec4(lighting, texColor.a));
+}";
+    }
 }
