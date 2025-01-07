@@ -172,7 +172,7 @@ namespace Gowtu
                     }
                     
                     GL.Uniform1f(uniforms[(int)Uniform.Time], elapsedTime);
-                    
+
                     // //This uniform is only mandatory on default shader
                     GL.Uniform1i(uniforms[(int)Uniform.IsFont], items[i].textureIsFont ? 1 : 0);
                 }
@@ -653,6 +653,96 @@ namespace Gowtu
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
+
+            AddVertices(command);
+        }
+
+        public static void AddText(Vector2 position, Font font, string text, float fontSize, Color color, Rectangle clippingRect = default(Rectangle)) 
+        {
+            if(font == null || string.IsNullOrEmpty(text))
+                return;
+
+            int requiredVertices = text.Length * 4; // 4 vertices per character
+            int requiredIndices = text.Length * 6; // 6 indices per character
+
+            CheckTemporaryVertexBuffer(requiredVertices);
+            CheckTemporaryIndexBuffer(requiredIndices);
+            
+            int vertexIndex = 0;
+            int indiceIndex = 0;
+            Color currentColor = color;
+            
+            Vector2 pos = new Vector2(position.X, position.Y);
+            pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
+            float originX = pos.X;
+            float originY = pos.Y;
+            float scale = font.GetPixelScale(fontSize);
+
+            for(int i = 0; i < text.Length; i++) {
+                char ch = text[i];
+
+                if(ch == '\n') 
+                {
+                    pos.X = originX;
+                    pos.Y += font.MaxHeight * scale;
+                    continue;
+                }
+
+                if(!font.GetGlyph(ch, out Glyph glyph))
+                    continue;
+
+                float xpos = pos.X + glyph.bearingX * scale;
+                float ypos = pos.Y - glyph.bearingY * scale;
+                float w = glyph.sizeX * scale;
+                float h = glyph.sizeY * scale;
+
+                //top-right, top-left, bottom-left, bottom-right
+                Vector2[] glyphVertices = 
+                {
+                    new Vector2(xpos + w, ypos + h),
+                    new Vector2(xpos,     ypos + h),
+                    new Vector2(xpos,     ypos),
+                    new Vector2(xpos + w, ypos)
+                };
+
+                Vector2[] glyphTextureCoords = {
+                    new Vector2(glyph.u1,  glyph.v1),
+                    new Vector2(glyph.u0,  glyph.v1),
+                    new Vector2(glyph.u0,  glyph.v0),
+                    new Vector2(glyph.u1,  glyph.v0)
+                };
+
+                vertexBufferTemp[vertexIndex+0] = new Vertex2D(new Vector2(glyphVertices[0].X, glyphVertices[0].Y), glyphTextureCoords[0], currentColor);
+                vertexBufferTemp[vertexIndex+1] = new Vertex2D(new Vector2(glyphVertices[1].X, glyphVertices[1].Y), glyphTextureCoords[1], currentColor);
+                vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], currentColor);
+                vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], currentColor);
+
+                indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
+                indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
+                indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
+                indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
+
+                vertexIndex += 4;
+                indiceIndex += 6;
+
+                pos.X += glyph.advanceX * scale;
+            }
+
+            Span<Vertex2D> pVertexBufferTemp = CollectionsMarshal.AsSpan<Vertex2D>(vertexBufferTemp).Slice(0, requiredVertices);
+            Span<uint> pIndexBufferTemp = CollectionsMarshal.AsSpan<uint>(indexBufferTemp).Slice(0, requiredIndices);
+
+            DrawCommand command = new DrawCommand();
+            command.vertices = pVertexBufferTemp;
+            command.indices = pIndexBufferTemp;
+            command.numVertices = vertexIndex;
+            command.numIndices = indiceIndex;
+            command.textureId = font.TextureId;
+            command.textureIsFont = true;
+            command.shaderId = shaderId;
+            command.clippingRect = clippingRect;
+            command.userData = null;
 
             AddVertices(command);
         }

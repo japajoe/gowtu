@@ -126,17 +126,39 @@ namespace Gowtu
             return null;
         }
 
-        public void SetLayer(Layer layer)
+        public void SetLayer(Layer layer, bool recursive)
         {
-            this.m_layer = (int)layer;
+            if(recursive)
+                SetLayerRecursive(transform, layer);
+            else
+                this.m_layer = (int)layer;
+        }
+
+        private void SetLayerRecursive(Transform root, Layer layer)
+        {
+            var queue = new Queue<Transform>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                Transform current = queue.Dequeue();
+
+                m_transform.gameObject.m_layer = (int)layer;
+
+                // Enqueue all the children for further processing
+                foreach (Transform child in current.children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
         }
 
         private void SetActive(bool isActive)
         {
-            SetActiveIteratively(m_transform, isActive);
+            SetActiveRecursive(m_transform, isActive);
         }
 
-        private void SetActiveIteratively(Transform root, bool active)
+        private void SetActiveRecursive(Transform root, bool active)
         {
             var queue = new Queue<Transform>();
             queue.Enqueue(root);
@@ -158,6 +180,13 @@ namespace Gowtu
                         else
                             GameBehaviour.OnBehaviourDisable(components[i].instanceId);
                     }
+                    else
+                    {
+                        if(active)
+                            components[i].OnActivateComponent();
+                        else
+                            components[i].OnDeactivateComponent();
+                    }
                 }
 
                 // Enqueue all the children for further processing
@@ -171,7 +200,7 @@ namespace Gowtu
         public static GameObject CreatePrimitive(PrimitiveType type)
         {
             GameObject g = new GameObject();
-            g.SetLayer(Layer.Default);
+            g.SetLayer(Layer.Default, true);
 
             switch(type)
             {
@@ -221,7 +250,7 @@ namespace Gowtu
                 }
                 case PrimitiveType.Skybox:
                 {
-                    g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast);
+                    g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast, true);
                     var mesh = Resources.FindMesh("Sphere");
                     var material = new SkyboxMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
@@ -263,7 +292,10 @@ namespace Gowtu
         public static void Destroy(GameObject g)
         {
             if(g == null)
+            {
+                System.Console.WriteLine("Cant destroy a GameObject that is null");
                 return;
+            }
 
             m_destroyQueue.Add(g);
         }

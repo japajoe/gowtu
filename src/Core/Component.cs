@@ -52,6 +52,16 @@ namespace Gowtu
             
         }
 
+        internal virtual void OnActivateComponent()
+        {
+
+        }
+
+        internal virtual void OnDeactivateComponent()
+        {
+            
+        }
+
         internal void SetGameObject(GameObject gameObject)
         {
             this.m_gameObject = gameObject;

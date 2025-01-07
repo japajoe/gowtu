@@ -105,7 +105,11 @@ namespace Gowtu
                 }
             }
 
+            //GLState.SetPolygonMode(PolygonMode.Line);
+
             Graphics2D.NewFrame();
+
+            //GLState.SetPolygonMode(PolygonMode.Fill);
 
             imgui.NewFrame();
             GameBehaviour.OnBehaviourGUI();
