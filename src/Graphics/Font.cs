@@ -78,7 +78,7 @@ namespace Gowtu
             m_textureData = new List<byte>();
         }
 
-        public void Destroy()
+        public void Delete()
         {
             if(m_textureId > 0) 
             {

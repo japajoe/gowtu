@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -35,6 +34,8 @@ namespace Gowtu
         private static Dictionary<string,Shader> shaders = new Dictionary<string, Shader>();
         private static Dictionary<string,Texture2D> textures = new Dictionary<string, Texture2D>();
         private static Dictionary<string,Mesh> meshes = new Dictionary<string, Mesh>();
+        private static Dictionary<string,Font> fonts = new Dictionary<string, Font>();
+        private static Dictionary<string,AudioClip> audioClips = new Dictionary<string, AudioClip>();
         private static Dictionary<string,UniformBufferObject> uniformBuffers = new Dictionary<string, UniformBufferObject>();
         private static ConcurrentQueue<Resource> resourceQueue = new ConcurrentQueue<Resource>();
 
@@ -42,9 +43,9 @@ namespace Gowtu
         {
             AddTexture("Default", new Texture2D(2, 2, Color.White));
             
-            var diffuseShader = CreateShader("Diffuse", DiffuseShader.vertexSource, DiffuseShader.fragmentSource);
-            var skyboxShader = CreateShader("Skybox", SkyboxShader.vertexSource, SkyboxShader.fragmentSource);
-            var terrainShader = CreateShader("Terrain", DiffuseShader.vertexSource, TerrainShader.fragmentSource);
+            var diffuseShader = AddShader("Diffuse", new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
+            var skyboxShader = AddShader("Skybox", new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
+            var terrainShader = AddShader("Terrain", new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
 
             AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
             AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
@@ -65,11 +66,6 @@ namespace Gowtu
             uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, "World");
             uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, "World");
             uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, "World");
-        }
-
-        private static Shader CreateShader(string name, string vertexSource, string fragmentSource)
-        {
-            return AddShader(name, new Shader(vertexSource, fragmentSource));
         }
 
         public static Shader AddShader(string name, Shader shader)
@@ -135,6 +131,42 @@ namespace Gowtu
             return meshes[name];
         }
 
+        public static Font AddFont(string name, Font font)
+        {
+            if(fonts.ContainsKey(name))
+            {
+                Console.WriteLine(string.Format("[FONT] can't add {0} with ID: {1} because it already exists", name, font.TextureId));
+                return null;
+            }
+
+            if(font.TextureId == 0)
+            {
+                Console.WriteLine(string.Format("[FONT] can't add {0} because it's not initialized", name));
+                return null;
+            }
+
+            fonts[name] = font;
+
+            Console.WriteLine("[FONT] {0} added with ID: {1}", name, font.TextureId);
+            
+            return fonts[name];
+        }
+
+        public static AudioClip AddAudioClip(string name, AudioClip audioClip)
+        {
+            if(audioClips.ContainsKey(name))
+            {
+                Console.WriteLine(string.Format("[AUDIOCLIP] can't add {0} with ID: {1} because it already exists", name, audioClip.GetHashCode()));
+                return null;
+            }
+
+            audioClips[name] = audioClip;
+
+            Console.WriteLine("[AUDIOCLIP] {0} added with ID: {1}", name, audioClip.GetHashCode());
+            
+            return audioClips[name];
+        }
+
         private static UniformBufferObject CreateUniformBuffer<T>(uint bindingIndex, uint numItems, string name) where T : unmanaged
         {
             UniformBufferObject ubo = new UniformBufferObject();
@@ -197,6 +229,22 @@ namespace Gowtu
             return meshes[name];
         }
 
+        public static Font FindFont(string name)
+        {
+            if(!fonts.ContainsKey(name))
+                return null;
+
+            return fonts[name];
+        }
+
+        public static AudioClip FindAudioClip(string name)
+        {
+            if(!audioClips.ContainsKey(name))
+                return null;
+
+            return audioClips[name];
+        }
+
         public static UniformBufferObject FindUniformBuffer(string name)
         {
             if(!uniformBuffers.ContainsKey(name))
@@ -238,6 +286,30 @@ namespace Gowtu
                 Console.WriteLine("[MESH] {0} removed with ID: {1}", name, mesh.VAO.Id);
                 mesh.Delete();
                 meshes.Remove(name);
+            }
+        }
+
+        public static void RemoveFont(string name)
+        {
+            Font font = FindFont(name);
+            
+            if(font != null)
+            {
+                Console.WriteLine("[FONT] {0} removed with ID: {1}", name, font.TextureId);
+                font.Delete();
+                fonts.Remove(name);
+            }
+        }
+
+        public static void RemoveAudioClip(string name)
+        {
+            AudioClip audioClip = FindAudioClip(name);
+            
+            if(audioClip != null)
+            {
+                Console.WriteLine("[AUDIOCLIP] {0} removed with ID: {1}", name, audioClip.GetHashCode());
+                audioClip.Dispose();
+                audioClips.Remove(name);
             }
         }
 
