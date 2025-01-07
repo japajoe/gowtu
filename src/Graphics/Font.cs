@@ -150,8 +150,20 @@ namespace Gowtu
                 return false;
             }
 
-            const UInt32 textureWidth = 1024;
-            const UInt32 textureHeight = 1024;
+            if(m_textureData == null)
+            {
+                Console.WriteLine("Could not generate texture because there is no texture data");
+                return false;
+            }
+
+            if(m_textureData.Count == 0)
+            {
+                Console.WriteLine("Could not generate texture because there is no texture data");
+                return false;
+            }
+
+            const Int32 textureWidth = 1024;
+            const Int32 textureHeight = 1024;
 
             ReadOnlySpan<byte> pTextureData = CollectionsMarshal.AsSpan(m_textureData);
 
@@ -159,7 +171,7 @@ namespace Gowtu
 
             GL.GenTextures(1, ref m_textureId);
             GL.BindTexture(TextureTarget.Texture2d, m_textureId);
-            GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.R8, (int)textureWidth, (int)textureHeight, 0, PixelFormat.Red, PixelType.UnsignedByte, pTextureData);
+            GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.R8, textureWidth, textureHeight, 0, PixelFormat.Red, PixelType.UnsignedByte, pTextureData);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
@@ -169,8 +181,6 @@ namespace Gowtu
             GL.ObjectLabel(ObjectIdentifier.Texture, (uint)m_textureId, -1, "FontAtlas");
 
             GL.BindTexture(TextureTarget.Texture2d, 0);
-
-            //Image::saveAsPNG("test.png", textureData.data(), textureData.size(), textureWidth, textureHeight, 1);
 
             return m_textureId > 0;
         }
@@ -192,7 +202,8 @@ namespace Gowtu
             return fontSize / m_pixelSize;
         }
 
-        public void CalculateBounds(string text, Int32 size, float fontSize, out float width, out float height) {
+        public void CalculateBounds(string text, Int32 size, float fontSize, out float width, out float height) 
+        {
             width = 0;
             height = 0;
 
@@ -315,16 +326,15 @@ namespace Gowtu
         {
             FT_Set_Pixel_Sizes(fontFace, 0, m_pixelSize);
         
-            const uint textureWidth = 1024;
-            const uint textureHeight = 1024;
-            const uint padding = 2;
+            const UInt32 textureWidth = 1024;
+            const UInt32 textureHeight = 1024;
+            const UInt32 padding = 2;
             UInt32 row = 0;
             UInt32 col = 0;
             UInt64 height = 0;
 
             Int32 LOAD_RENDER = (int)FT_LOAD_RENDER;
             Int32 RENDER_MODE_SDF = (int)FT_RENDER_MODE_SDF;
-            //Int32 flags = LOAD_RENDER | ((RENDER_MODE_SDF & 15) << 16);
             Int32 flags = LOAD_RENDER | RENDER_MODE_SDF;
             FT_LOAD loadFlags = (FT_LOAD)flags;
 
@@ -346,7 +356,7 @@ namespace Gowtu
                 if(FT_Load_Char(fontFace, new nuint(glyphIdx), loadFlags) != FT_Error.FT_Err_Ok)
                     continue;
 
-                if(FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_NORMAL)  != FT_Error.FT_Err_Ok)
+                if(FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_NORMAL) != FT_Error.FT_Err_Ok)
                     continue;
 
                 if(fontFace->glyph->bitmap.rows > maxRowHeight)

@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Runtime.InteropServices;
 
 namespace Gowtu
@@ -53,6 +54,18 @@ namespace Gowtu
             if(value <= 0)
                 return 0;
             return (float)value / 255.0f;
+        }
+
+        public static Color Lerp(Color color1, Color color2, float t)
+        {
+            t = Math.Max(0, Math.Min(1.0f, t));
+
+            Color color = new Color();
+            color.r = color1.r + (color2.r - color1.r) * t;
+            color.g = color1.g + (color2.g - color1.g) * t;
+            color.b = color1.b + (color2.b - color1.b) * t;
+            color.a = color1.a + (color2.a - color1.a) * t;
+            return color;
         }
 
         public static Color LightGray
