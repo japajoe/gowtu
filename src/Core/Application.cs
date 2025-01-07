@@ -37,17 +37,23 @@ namespace Gowtu
         Maximize = 1 << 3
     }
 
+    public struct Configuration
+    {
+        public string title;
+        public int width;
+        public int height;
+        public WindowFlags flags;
+        public byte[] iconData;
+    }
+
     public delegate void LoadEvent();
 
     public sealed class Application
     {
         public event LoadEvent Load;
 
-        private int width;
-        private int height;
-        private string title;
+        private Configuration config;
         private IntPtr window;
-        private WindowFlags flags;
         private static IntPtr nativeWindow;
 
         public static IntPtr NativeWindow
@@ -60,10 +66,18 @@ namespace Gowtu
 
         public Application(int width, int height, string title, WindowFlags flags = WindowFlags.VSync)
         {
-            this.width = width;
-            this.height = height;
-            this.title = title;
-            this.flags = flags;
+            config.width = width;
+            config.height = height;
+            config.title = title;
+            config.flags = flags;
+            config.iconData = null;
+            window = IntPtr.Zero;
+            nativeWindow = IntPtr.Zero;
+        }
+
+        public Application(Configuration config)
+        {
+            this.config = config;
             window = IntPtr.Zero;
             nativeWindow = IntPtr.Zero;
         }
@@ -88,21 +102,21 @@ namespace Gowtu
             GLFW.WindowHint(GLFW.VISIBLE, GLFW.FALSE);
             GLFW.WindowHint(GLFW.SAMPLES, 4);
 
-            if(flags.HasFlag(WindowFlags.Maximize))
+            if(config.flags.HasFlag(WindowFlags.Maximize))
                 GLFW.WindowHint(GLFW.MAXIMIZED, GLFW.TRUE);
 
-            if(flags.HasFlag(WindowFlags.FullScreen))
+            if(config.flags.HasFlag(WindowFlags.FullScreen))
             {
                 IntPtr monitor =  GLFW.GetPrimaryMonitor();
 
                 if(GLFW.GetVideoMode(monitor, out GLFWvidmode mode))
-                    window = GLFW.CreateWindow(mode.width, mode.height, title, monitor, IntPtr.Zero);
+                    window = GLFW.CreateWindow(mode.width, mode.height, config.title, monitor, IntPtr.Zero);
                 else
-                    window = GLFW.CreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
+                    window = GLFW.CreateWindow(config.width, config.height, config.title, IntPtr.Zero, IntPtr.Zero);
             }
             else
             {
-                window = GLFW.CreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
+                window = GLFW.CreateWindow(config.width, config.height, config.title, IntPtr.Zero, IntPtr.Zero);
             }
 
             if(window == IntPtr.Zero)
@@ -112,13 +126,48 @@ namespace Gowtu
                 return;
             }
 
+            if(config.iconData != null)
+            {
+                Image image = new Image(config.iconData);
+
+                if(image.IsLoaded)
+                {
+                    GLFWimage windowIcon = new GLFWimage();
+                    windowIcon.width = (int)image.Width;
+                    windowIcon.height = (int)image.Height;
+                    
+                    windowIcon.pixels = Marshal.AllocHGlobal(image.Data.Length);
+                    
+                    if(windowIcon.pixels != IntPtr.Zero)
+                    {
+                        Marshal.Copy(image.Data, 0, windowIcon.pixels, image.Data.Length);
+                        
+                        GLFWimage[] images = new GLFWimage[1]
+                        {
+                            windowIcon
+                        };
+                        
+                        GLFW.SetWindowIcon(window, images);
+
+                        Marshal.FreeHGlobal(windowIcon.pixels);
+                    }
+                }
+            }
+
             nativeWindow = window;
 
-            GLFW.SwapInterval(flags.HasFlag(WindowFlags.VSync) ? 1 : 0);
+            GLFW.SwapInterval(config.flags.HasFlag(WindowFlags.VSync) ? 1 : 0);
 
             GLFW.MakeContextCurrent(window);
 
             GLLoader.LoadBindings(new GLFWBindingsContext());
+
+            string version = OpenTK.Graphics.OpenGL.GL.GetString(OpenTK.Graphics.OpenGL.StringName.Version);
+
+            if(!string.IsNullOrEmpty(version))
+            {
+                Console.WriteLine("OpenGL Version: " + version);
+            }
 
             GLFW.SetFramebufferSizeCallback(window, OnWindowResize);
             GLFW.SetWindowPosCallback(window, OnWindowMove);
