@@ -696,7 +696,7 @@ namespace Gowtu
                 float w = glyph.sizeX * scale;
                 float h = glyph.sizeY * scale;
 
-                //top-right, top-left, bottom-left, bottom-right
+                // top-right, top-left, bottom-left, bottom-right
                 Vector2[] glyphVertices = 
                 {
                     new Vector2(xpos + w, ypos + h),
@@ -717,12 +717,19 @@ namespace Gowtu
                 vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], currentColor);
                 vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], currentColor);
 
-                indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
-                indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
-                indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
-                indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
+                // indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
+                // indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
+                // indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
+                // indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
+                // indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
+                // indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
+
+                indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex); // Bottom-right
+                indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex); // Top-left
+                indexBufferTemp[indiceIndex+2] = (uint)(1 + vertexIndex); // Top-right
+                indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex); // Bottom-right
+                indexBufferTemp[indiceIndex+4] = (uint)(3 + vertexIndex); // Bottom-left
+                indexBufferTemp[indiceIndex+5] = (uint)(2 + vertexIndex); // Top-left
 
                 vertexIndex += 4;
                 indiceIndex += 6;
