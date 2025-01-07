@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.89.7.1"/>
-    <PackageReference Include="JAJ.Packages.GLFWNet" Version="1.0.2"/>
+    <PackageReference Include="JAJ.Packages.GLFWNet" Version="1.0.3"/>
     <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="1.7.6"/>
     <PackageReference Include="JAJ.Packages.OpenTK5" Version="1.0.0"/>
     <PackageReference Include="StbImageSharp" Version="2.30.15"/>
