@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using MiniAudioEx;
 using MiniAudioEx.Core;
 
@@ -55,6 +56,8 @@ namespace Gowtu
         private ma_sound_process_proc processCallback;
         private ma_waveform_proc waveformCallback;
         private ConcurrentQueue<int> endEventQueue;
+        private ConcurrentList<IAudioEffect> effects;
+        private ConcurrentList<IAudioGenerator> generators;
 
         /// <summary>
         /// Gets a handle to the native ma_audio_source instance.
@@ -248,6 +251,8 @@ namespace Gowtu
             if(handle != IntPtr.Zero)
             {
                 endEventQueue = new ConcurrentQueue<int>();
+                effects = new ConcurrentList<IAudioEffect>();
+                generators = new ConcurrentList<IAudioGenerator>();
 
                 loadCallback = OnLoad;
                 endCallback = OnEnd;
@@ -283,6 +288,15 @@ namespace Gowtu
                 //Clear the queues (netstandard2.0 does not have a Clear method for ConcurrentQueue)
                 while(endEventQueue.Count > 0)
                     endEventQueue.TryDequeue(out _);
+
+                for(int i = 0; i < effects.Count; i++)
+                    effects[i].OnDestroy();
+
+                for(int i = 0; i < generators.Count; i++)
+                    generators[i].OnDestroy();
+
+                effects.Clear();
+                generators.Clear();
             }
         }
 
@@ -326,6 +340,100 @@ namespace Gowtu
         }
 
         /// <summary>
+        /// A thread safe method to add an IAudioEffect.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void AddEffect(IAudioEffect effect)
+        {
+            effects.Add(effect);
+        }
+
+        /// <summary>
+        /// A thread safe method to remove an IAudioEffect.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void RemoveEffect(IAudioEffect effect)
+        {
+            effects.Remove(effect);
+        }
+
+        /// <summary>
+        /// A thread safe method to remove an IAudioEffect by its index.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void RemoveEffect(int index)
+        {
+            if(index >= 0 && index < effects.Count)
+            {
+                var target = effects[index];
+                effects.Remove(target);
+            }
+        }
+
+        /// <summary>
+        /// A thread safe method to remove all IAudioEffect instances.
+        /// </summary>
+        public void RemoveEffects()
+        {
+            List<IAudioEffect> targets = new List<IAudioEffect>();
+            for(int i = 0; i < effects.Count; i++)
+            {
+                targets.Add(effects[i]);
+            }
+            if(targets.Count > 0)
+            {
+                effects.Remove(targets);
+            }
+        }
+
+        /// <summary>
+        /// A thread safe method to add an IAudioGenerator.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void AddGenerator(IAudioGenerator generator)
+        {
+            generators.Add(generator);
+        }
+
+        /// <summary>
+        /// A thread safe method to remove an IAudioGenerator.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void RemoveGenerator(IAudioGenerator generator)
+        {
+            generators.Remove(generator);
+        }
+
+        /// <summary>
+        /// A thread safe method to remove an IAudioGenerator by its index.
+        /// </summary>
+        /// <param name="effect"></param>
+        public void RemoveGenerator(int index)
+        {
+            if(index >= 0 && index < generators.Count)
+            {
+                var target = generators[index];
+                generators.Remove(target);
+            }
+        }
+
+        /// <summary>
+        /// A thread safe method to remove all IAudioGenerator instances.
+        /// </summary>
+        public void RemoveGenerators()
+        {
+            List<IAudioGenerator> targets = new List<IAudioGenerator>();
+            for(int i = 0; i < generators.Count; i++)
+            {
+                targets.Add(generators[i]);
+            }
+            if(targets.Count > 0)
+            {
+                generators.Remove(targets);
+            }
+        }
+
+        /// <summary>
         /// Called whenever audio is loaded using the 'Play' method.
         /// </summary>
         /// <param name="pUserData"></param>
@@ -361,6 +469,11 @@ namespace Gowtu
 
             AudioBuffer<float> framesOut = new AudioBuffer<float>(pFramesOut, length);
 
+            for(int i = 0; i < effects.Count; i++)
+            {
+                effects[i].OnProcess(framesOut, frameCount, (int)channels);
+            }
+
             Process?.Invoke(framesOut, frameCount, (int)channels);
         }
 
@@ -377,7 +490,30 @@ namespace Gowtu
 
             AudioBuffer<float> framesOut = new AudioBuffer<float>(pFramesOut, length);
 
+            for(int i = 0; i < generators.Count; i++)
+            {
+                generators[i].OnGenerate(framesOut, frameCount, (int)channels);
+            }
+
             Read?.Invoke(framesOut, frameCount, (int)channels);
         }
     }
+
+    // /// <summary>
+    // /// An interface for implementing audio effects. These effects can be added to an AudioSource by using the AddEffect method.
+    // /// </summary>
+    // public interface IAudioEffect
+    // {
+    //     void OnProcess(AudioBuffer<float> framesOut, UInt64 frameCount, Int32 channels);
+    //     void OnDestroy();
+    // }
+
+    // /// <summary>
+    // /// An interface for implementing audio generators. These generators can be added to an AudioSource by using the AddGenerator method.
+    // /// </summary>
+    // public interface IAudioGenerator
+    // {
+    //     void OnGenerate(AudioBuffer<float> framesOut, UInt64 frameCount, Int32 channels);
+    //     void OnDestroy();
+    // }
 }
