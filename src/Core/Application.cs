@@ -170,8 +170,9 @@ namespace Gowtu
         private void NewFrame()
         {
             Time.NewFrame();
-            Input.NewFrame();                
+            Input.NewFrame();
             GameBehaviour.NewFrame();
+            Resources.NewFrame();
             Audio.NewFrame();
             Graphics.NewFrame();
         }

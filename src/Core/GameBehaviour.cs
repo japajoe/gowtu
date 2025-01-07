@@ -99,6 +99,10 @@ namespace Gowtu
                 {
                     behaviour.Render += (Action)del;
                 }
+                else if (methods[i].Name == "OnResourceLoaded")
+                {
+                    behaviour.ResourceLoaded += (Action<Resource>)del;
+                }
             }
 
             behaviour.instanceId = m.instanceId;
@@ -139,11 +143,11 @@ namespace Gowtu
 
         internal static void OnBehaviourDisable(Guid instanceId)
         {
-            foreach (var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if (behaviour.instanceId == instanceId)
+                if (behaviours[i].instanceId == instanceId)
                 {
-                    behaviour.OnDisable();
+                    behaviours[i].OnDisable();
                     return;
                 }
             }
@@ -151,11 +155,11 @@ namespace Gowtu
 
         internal static void OnBehaviourEnable(Guid instanceId)
         {
-            foreach (var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if (behaviour.instanceId == instanceId)
+                if (behaviours[i].instanceId == instanceId)
                 {
-                    behaviour.OnEnable();
+                    behaviours[i].OnEnable();
                     return;
                 }
             }
@@ -163,10 +167,10 @@ namespace Gowtu
 
         internal static void OnApplicationClosing()
         {
-            foreach(var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if(behaviour.GameObject.isActive)
-                    behaviour.OnApplicationQuit();
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnApplicationQuit();
             }
 
             behaviours.Clear();
@@ -174,28 +178,38 @@ namespace Gowtu
 
         internal static void OnBehaviourUpdate()
         {
-            foreach(var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if(behaviour.GameObject.isActive)
-                    behaviour.OnUpdate();
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnUpdate();
             }
         }
 
         internal static void OnBehaviourLateUpdate()
         {
-            foreach(var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if(behaviour.GameObject.isActive)
-                    behaviour.OnLateUpdate();
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnLateUpdate();
             }
         }
 
         internal static void OnBehaviourGUI()
         {
-            foreach(var behaviour in behaviours)
+            for(int i = 0; i < behaviours.Count; i++)
             {
-                if(behaviour.GameObject.isActive)
-                    behaviour.OnGUI();
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnGUI();
+            }
+        }
+
+        internal static void OnResourceLoaded(Resource resource)
+        {
+            for(int i = 0; i < behaviours.Count; i++)
+            {
+                //Dispatch to any behaviour implementing this method, 
+                //regardless if it is active or not
+                behaviours[i].OnResourceLoaded(resource);
             }
         }
     }
@@ -214,6 +228,7 @@ namespace Gowtu
         public event Action Destroy;
         public event Action ApplicationQuit;
         public event Action Render;
+        public event Action<Resource> ResourceLoaded;
 
         private Component behaviour;
 
@@ -275,6 +290,11 @@ namespace Gowtu
         public void OnRender()
         {
             Render?.Invoke();
+        }
+
+        public void OnResourceLoaded(Resource resource)
+        {
+            ResourceLoaded?.Invoke(resource);
         }
     }
 }

@@ -143,14 +143,10 @@ namespace Gowtu
 
             mesh.VAO.Bind();
 
-            GLState.SetPolygonMode(PolygonMode.Line);
-
             if(mesh.EBO.Id > 0)
                 GL.DrawElements(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, mesh.IndiceCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
             else
                 GL.DrawArrays(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, 0, mesh.VertexCount);
-
-            GLState.SetPolygonMode(PolygonMode.Fill);
             
             mesh.VAO.Unbind();
         }

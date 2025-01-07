@@ -21,9 +21,11 @@
 // SOFTWARE.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -36,6 +38,7 @@ namespace Gowtu
         private static Dictionary<string,Mesh> meshes = new Dictionary<string, Mesh>();
         private static Dictionary<string,UniformBufferObject> uniformBuffers = new Dictionary<string, UniformBufferObject>();
         private static Assembly assembly = Assembly.GetExecutingAssembly();
+        private static ConcurrentQueue<Resource> resourceQueue = new ConcurrentQueue<Resource>();
 
         internal static void LoadDefault()
         {
@@ -288,5 +291,125 @@ namespace Gowtu
         {
             return assembly.GetManifestResourceNames();
         }
+
+        internal static void NewFrame()
+        {
+            if(resourceQueue.Count > 0)
+            {
+                //Only dispatch 1 resource per frame in order not to lock the thread
+                if(resourceQueue.TryDequeue(out Resource resource))
+                {
+                    GameBehaviour.OnResourceLoaded(resource);
+                }
+            }
+        }
+
+        public static void LoadAsyncFromFile(List<ResourceInfo> resources)
+        {
+            Task.Run(async () =>
+            {
+                for(int i = 0; i < resources.Count; i++)
+                {
+                    Resource asset = new Resource();
+                    asset.info = new ResourceInfo();
+                    asset.info.filePath = resources[i].filePath;
+                    asset.info.type = resources[i].type;
+
+                    if(!System.IO.File.Exists(resources[i].filePath))
+                    {
+                        await Task.Delay(1);
+                        asset.data = null;
+                        asset.info.result = ResourceLoadResult.Error;
+                        resourceQueue.Enqueue(asset);
+                    }
+                    else
+                    {
+                        asset.data = await System.IO.File.ReadAllBytesAsync(resources[i].filePath);
+                        asset.info.result = ResourceLoadResult.Ok;
+                        resourceQueue.Enqueue(asset);
+                    }
+                }
+            });            
+        }
+
+        public static void LoadAsyncFromAssetPack(string pathToAssetPack, string assetPackKey, List<ResourceInfo> resources)
+        {
+            if(!System.IO.File.Exists(pathToAssetPack))
+            {
+                System.Console.WriteLine("The file does not exist: " + pathToAssetPack);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                using(AssetPack pack = new AssetPack(pathToAssetPack, assetPackKey))
+                {
+                    if(pack.Loaded)
+                    {
+                        for(int i = 0; i < resources.Count; i++)
+                        {
+                            Resource asset = new Resource();
+                            asset.info = new ResourceInfo();
+                            asset.info.filePath = resources[i].filePath;
+                            asset.info.type = resources[i].type;
+
+                            if(!pack.FileExists(resources[i].filePath))
+                            {
+                                await Task.Delay(1);
+                                asset.data = null;
+                                asset.info.result = ResourceLoadResult.Error;
+                                resourceQueue.Enqueue(asset);
+                            }
+                            else
+                            {
+                                asset.data = await pack.GetFileBufferAsync(resources[i].filePath);
+                                asset.info.result = ResourceLoadResult.Ok;
+                                resourceQueue.Enqueue(asset);
+                            }
+                        }
+                    }
+                }                
+            });            
+        }
+    }
+
+    public enum ResourceType
+    {
+        AudioClip,
+        Texture,
+        Shader,
+        Font,
+        Blob
+    }
+
+    public enum ResourceLoadResult
+    {
+        Ok,
+        Error
+    }
+
+    public class ResourceInfo
+    {
+        public ResourceType type;
+        public ResourceLoadResult result;
+        public string filePath;
+
+        public ResourceInfo()
+        {
+            this.type = ResourceType.Blob;
+            this.filePath = string.Empty;
+        }
+
+        public ResourceInfo(ResourceType type, string filePath)
+        {
+            this.type = type;
+            this.filePath = filePath;
+        }
+    }
+
+    public class Resource
+    {
+        public ResourceInfo info;
+        public byte[] data;
     }
 }

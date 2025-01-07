@@ -10,7 +10,7 @@ A simple library for game development. I initially made it to showcase the capab
 - Frustum culling.
 - Mouse picking.
 - Advanced audio system with full support for spatialization.
-- Asset loading from asset packs.
+- Asynchronous asset loading from disk or asset packs.
 - Cross platform.
 
 # Dependencies

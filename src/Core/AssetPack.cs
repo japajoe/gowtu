@@ -23,6 +23,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Gowtu
 {
@@ -201,6 +202,39 @@ namespace Gowtu
                 while(totalBytes > 0)
                 {
                     int bytesRead = fileStream.Read(data, bufferOffset, data.Length);
+                    totalBytes -= bytesRead;
+                    bufferOffset += bytesRead;
+                }
+            }
+
+            return data;
+        }
+
+        public async Task<byte[]> GetFileBufferAsync(string filename)
+        {
+            if(!loaded)
+                return null;
+
+            var info = GetFileInfo(filename);
+
+            if(info == null)
+                return null;
+
+            long length = info.Length;
+            long offset = info.Offset;
+
+            byte[] data = new byte[length];
+
+            using(var fileStream = new FileStream(name, FileMode.Open))
+            {
+                fileStream.Seek(offset, SeekOrigin.Begin);
+
+                long totalBytes = length;
+                int bufferOffset = 0;
+
+                while(totalBytes > 0)
+                {
+                    int bytesRead = await fileStream.ReadAsync(data, bufferOffset, data.Length);
                     totalBytes -= bytesRead;
                     bufferOffset += bytesRead;
                 }

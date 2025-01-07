@@ -211,7 +211,7 @@ namespace Gowtu
             texture3 = defaultTexture;
             texture4 = defaultTexture;
             diffuseColor = Color.White;
-            ambientStrength = 0.1f;
+            ambientStrength = 1.0f;
             shininess = 16.0f;
             uvScale1 = new Vector2(1, 1);
             uvScale2 = new Vector2(1, 1);
