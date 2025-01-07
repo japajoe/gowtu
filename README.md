@@ -19,6 +19,7 @@ A simple library for game development. I initially made it to showcase the capab
 - [MiniAudioEx](https://www.nuget.org/packages/JAJ.Packages.MiniAudioEx)
 - [ImGui.NET](https://www.nuget.org/packages/ImGui.NET)
 - [StbImageSharp](https://www.nuget.org/packages/StbImageSharp)
+- [FreeTypeSharp](https://www.nuget.org/packages/FreeTypeSharp)
 
 # Hello world
 ```csharp
