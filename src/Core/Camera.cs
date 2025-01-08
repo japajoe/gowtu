@@ -29,6 +29,7 @@ namespace Gowtu
     public sealed class Camera : Component
     {
         public static readonly uint UBO_BINDING_INDEX = 1;
+        public static readonly string UBO_NAME = "Camera";
 
         private static Camera m_mainCamera;
         private float m_fieldOfView;
@@ -45,10 +46,6 @@ namespace Gowtu
             get
             {
                 return m_mainCamera;
-            }
-            set
-            {
-                m_mainCamera = value;
             }
         }
 
@@ -125,12 +122,22 @@ namespace Gowtu
             Initialize();
             Graphics.Resize += OnWindowResize;
             transform.Changed += OnTransformChanged;
+
+            if(m_mainCamera == null)
+            {
+                m_mainCamera = this;
+            }
         }
 
         internal override void OnDestroyComponent()
         {
             Graphics.Resize -= OnWindowResize;
             transform.Changed -= OnTransformChanged;
+
+            if(m_mainCamera == this)
+            {
+                m_mainCamera = null;
+            }
         }
 
         public Matrix4 GetProjectionMatrix()
@@ -171,7 +178,7 @@ namespace Gowtu
             if(ubo != null)
                 return;
 
-            ubo = Resources.FindUniformBuffer("Camera");
+            ubo = Resources.FindUniformBuffer(UBO_NAME);
         }
 
         internal static void UpdateUniformBuffer()

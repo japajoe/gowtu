@@ -203,7 +203,7 @@ namespace Gowtu
 
         public TerrainMaterial() : base()
         {
-            var defaultTexture = Resources.FindTexture("Default");
+            var defaultTexture = Resources.FindTexture<Texture2D>("Default");
             
             splatMap = defaultTexture;
             texture1 = defaultTexture;

@@ -173,13 +173,20 @@ namespace Gowtu
                     
                     GL.Uniform1f(uniforms[(int)Uniform.Time], elapsedTime);
 
+                    GL.Uniform2f(uniforms[(int)Uniform.Resolution], viewport.width, viewport.height);
+
                     // //This uniform is only mandatory on default shader
                     GL.Uniform1i(uniforms[(int)Uniform.IsFont], items[i].textureIsFont ? 1 : 0);
                 }
                 else 
                 {
                     // Only dispatch callback for custom shaders
-                    //These 3 uniforms are mandatory on any shader
+                    //These 4 uniforms are mandatory on any shader:
+                    //uTexture
+                    //uProjection
+                    //uTime
+                    //uResolution
+
                     GL.Uniform1i(GL.GetUniformLocation(lastShaderId, "uTexture"), 0);
                     
                     unsafe 
@@ -191,6 +198,8 @@ namespace Gowtu
                     }
                     
                     GL.Uniform1f(GL.GetUniformLocation(lastShaderId, "uTime"), elapsedTime);
+
+                    GL.Uniform2f(GL.GetUniformLocation(lastShaderId, "uResolution"), viewport.width, viewport.height);
                     
                     UniformUpdate?.Invoke(lastShaderId, items[i].userData);
                 }
@@ -717,13 +726,6 @@ namespace Gowtu
                 vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], currentColor);
                 vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], currentColor);
 
-                // indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
-                // indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
-                // indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
-                // indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
-                // indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
-                // indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
-
                 indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex); // Bottom-right
                 indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex); // Top-left
                 indexBufferTemp[indiceIndex+2] = (uint)(1 + vertexIndex); // Top-right
@@ -1018,6 +1020,7 @@ namespace Gowtu
             string fragmentSource = @"#version 330 core
             uniform sampler2D uTexture;
             uniform float uTime;
+            uniform vec2 uResolution;
             uniform int uIsFont;
 
             in vec2 oTexCoord;
@@ -1059,6 +1062,7 @@ namespace Gowtu
             GL.DeleteShader(frag_handle);
 
             uniforms[(int)Uniform.Texture] = GL.GetUniformLocation(shaderId, "uTexture");
+            uniforms[(int)Uniform.Resolution] = GL.GetUniformLocation(shaderId, "uResolution");
             uniforms[(int)Uniform.Projection] = GL.GetUniformLocation(shaderId, "uProjection");
             uniforms[(int)Uniform.IsFont] = GL.GetUniformLocation(shaderId, "uIsFont");
             uniforms[(int)Uniform.Time] = GL.GetUniformLocation(shaderId, "uTime");
@@ -1174,6 +1178,7 @@ namespace Gowtu
     public enum Uniform : int
     {
         Projection,
+        Resolution,
         Texture,
         Time,
         IsFont,

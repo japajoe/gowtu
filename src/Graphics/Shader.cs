@@ -62,6 +62,33 @@ namespace Gowtu
             }
         }
 
+        public Shader(string vertexSource, string fragmentSource, string geometrySource)
+        {
+            int vertShader = Compile(vertexSource, ShaderType.VertexShader);
+            int fragShader = Compile(fragmentSource, ShaderType.FragmentShader);
+            int geometryShader = Compile(geometrySource, ShaderType.GeometryShader);
+
+            if(vertShader > 0 && fragShader > 0 && geometryShader > 0)
+            {
+                id = GL.CreateProgram();
+                
+                GL.AttachShader(id, vertShader);
+                GL.AttachShader(id, fragShader);
+                GL.AttachShader(id, geometryShader);
+                GL.LinkProgram(id);
+
+                if(GL.GetProgrami(id, ProgramPropertyARB.LinkStatus) == 0)
+                {
+                    GL.GetProgramInfoLog(id, out string info);
+                    Console.WriteLine(info);
+                }
+
+                GL.DeleteShader(vertShader);
+                GL.DeleteShader(fragShader);
+                GL.DeleteShader(geometryShader);
+            }
+        }
+
         public void Use()
         {
             GL.UseProgram(id);

@@ -28,6 +28,7 @@ namespace Gowtu
     public static class World
     {
         public static readonly uint UBO_BINDING_INDEX = 2;
+        public static readonly string UBO_NAME = "World";
 
         private static Color fogColor = new Color(247, 169, 90, 255);
         private static float fogDensity = 0.0005f;
@@ -88,7 +89,7 @@ namespace Gowtu
             if(ubo != null)
                 return;
 
-            ubo = Resources.FindUniformBuffer("World");
+            ubo = Resources.FindUniformBuffer(UBO_NAME);
         }
 
         internal static void UpdateUniformBuffer()

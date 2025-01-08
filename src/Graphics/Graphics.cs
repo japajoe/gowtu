@@ -62,10 +62,12 @@ namespace Gowtu
         private static List<Renderer> renderers = new List<Renderer>();
         private static PriorityQueue<Renderer, uint> renderQueue = new PriorityQueue<Renderer, uint>();
         private static ImGuiController imgui = null;
+        private static ShadowMap shadowMap = null;
 
         internal static void Initialize()
         {
             imgui = new ImGuiController();
+            shadowMap = new ShadowMap();
         }
 
         internal static void Deinitialize()

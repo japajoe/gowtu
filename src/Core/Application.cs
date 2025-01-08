@@ -186,10 +186,10 @@ namespace Gowtu
                 Audio.Initialize(44100, 2);
             }
 
-            Graphics.Initialize();
-
             //Loads default shaders/textures/meshes
             Resources.LoadDefault();
+
+            Graphics.Initialize();
 
             Load?.Invoke();
 

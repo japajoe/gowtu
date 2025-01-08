@@ -32,7 +32,7 @@ namespace Gowtu
     public static class Resources
     {
         private static Dictionary<string,Shader> shaders = new Dictionary<string, Shader>();
-        private static Dictionary<string,Texture2D> textures = new Dictionary<string, Texture2D>();
+        private static Dictionary<string,Texture> textures = new Dictionary<string, Texture>();
         private static Dictionary<string,Mesh> meshes = new Dictionary<string, Mesh>();
         private static Dictionary<string,Font> fonts = new Dictionary<string, Font>();
         private static Dictionary<string,AudioClip> audioClips = new Dictionary<string, AudioClip>();
@@ -42,10 +42,12 @@ namespace Gowtu
         internal static void LoadDefault()
         {
             AddTexture("Default", new Texture2D(2, 2, Color.White));
+            AddTexture("Depth", new Texture2DArray(2048, 2048, 5));
             
             var diffuseShader = AddShader("Diffuse", new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
             var skyboxShader = AddShader("Skybox", new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
             var terrainShader = AddShader("Terrain", new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
+            var depthShader = AddShader("Depth", new Shader(DepthShader.vertexSource, DepthShader.fragmentSource, DepthShader.geometrySource));
 
             AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
             AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
@@ -53,19 +55,24 @@ namespace Gowtu
             AddMesh("Sphere", MeshGenerator.CreateSphere(new Vector3(1, 1, 1)));
             AddMesh("Skybox", MeshGenerator.CreateSkybox(new Vector3(1, 1, 1)));
 
-            var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, "Lights");
-            var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, "Camera");
-            var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, "World");
+            var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, Light.UBO_NAME);
+            var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, Camera.UBO_NAME);
+            var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, World.UBO_NAME);
+            var uboShadow = CreateUniformBuffer<UniformWorldInfo>(ShadowMap.UBO_BINDING_INDEX, 1, ShadowMap.UBO_NAME);
 
-            uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, "Lights");
-            uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, "Lights");
+            uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
 
-            uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, "Camera");
-            uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, "Camera");
+            uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
 
-            uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, "World");
-            uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, "World");
-            uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, "World");
+            uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+
+            uboShadow.BindBlockToShader(diffuseShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+            uboShadow.BindBlockToShader(terrainShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+            uboShadow.BindBlockToShader(depthShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
         }
 
         public static Shader AddShader(string name, Shader shader)
@@ -89,23 +96,23 @@ namespace Gowtu
             return shaders[name];
         }
 
-        public static Texture2D AddTexture(string name, Texture2D texture)
+        public static Texture AddTexture(string name, Texture texture)
         {
             if(textures.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[TEXTURE2D] can't add {0} with ID: {1} because it already exists", name, texture.Id));
+                Console.WriteLine(string.Format("[TEXTURE] can't add {0} with ID: {1} because it already exists", name, texture.Id));
                 return null;
             }
 
             if(texture.Id == 0)
             {
-                Console.WriteLine(string.Format("[TEXTURE2D] can't add {0} because it's not initialized", name));
+                Console.WriteLine(string.Format("[TEXTURE] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             textures[name] = texture;
 
-            Console.WriteLine("[TEXTURE2D] {0} added with ID: {1}", name, texture.Id);
+            Console.WriteLine("[TEXTURE] {0} added with ID: {1}", name, texture.Id);
             
             return textures[name];
         }
@@ -213,12 +220,12 @@ namespace Gowtu
             return shaders[name];
         }
 
-        public static Texture2D FindTexture(string name)
+        public static T FindTexture<T>(string name) where T : Texture
         {
             if(!textures.ContainsKey(name))
                 return null;
 
-            return textures[name];
+            return textures[name] as T;
         }
 
         public static Mesh FindMesh(string name)
@@ -267,11 +274,11 @@ namespace Gowtu
 
         public static void RemoveTexture(string name)
         {
-            Texture2D texture = FindTexture(name);
+            Texture texture = FindTexture<Texture>(name);
             
             if(texture != null)
             {
-                Console.WriteLine("[TEXTURE2D] {0} removed with ID: {1}", name, texture.Id);
+                Console.WriteLine("[TEXTURE] {0} removed with ID: {1}", name, texture.Id);
                 texture.Delete();
                 textures.Remove(name);
             }

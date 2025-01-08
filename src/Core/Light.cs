@@ -36,30 +36,32 @@ namespace Gowtu
     public sealed class Light : Component
     {
         public static readonly uint UBO_BINDING_INDEX = 0;
+        public static readonly string UBO_NAME = "Lights";
         public static readonly uint MAX_LIGHTS = 32;
 
-        private LightType type;
-        private float strength;
-        private float constant;
-        private float linear;
-        private float quadratic;
-        private Color color;
-        private Color ambient;
-        private Color diffuse;
-        private Color specular;
+        private LightType m_type;
+        private float m_strength;
+        private float m_constant;
+        private float m_linear;
+        private float m_quadratic;
+        private Color m_color;
+        private Color m_ambient;
+        private Color m_diffuse;
+        private Color m_specular;
 
-        private static UniformBufferObject ubo;
-        private static List<Light> lights;
+        private static UniformBufferObject m_ubo;
+        private static List<Light> m_lights;
+        private static Light m_mainLight;
 
         public LightType Type
         {
             get
             {
-                return type;
+                return m_type;
             }
             set
             {
-                type = value;
+                m_type = value;
             }
         }
 
@@ -67,11 +69,11 @@ namespace Gowtu
         {
             get
             {
-                return strength;
+                return m_strength;
             }
             set
             {
-                strength = value;
+                m_strength = value;
             }
         }
 
@@ -79,11 +81,11 @@ namespace Gowtu
         {
             get
             {
-                return color;
+                return m_color;
             }
             set
             {
-                color = value;
+                m_color = value;
             }
         }
 
@@ -91,11 +93,11 @@ namespace Gowtu
         {
             get
             {
-                return ambient;
+                return m_ambient;
             }
             set
             {
-                ambient = value;
+                m_ambient = value;
             }
         }
 
@@ -103,11 +105,11 @@ namespace Gowtu
         {
             get
             {
-                return diffuse;
+                return m_diffuse;
             }
             set
             {
-                diffuse = value;
+                m_diffuse = value;
             }
         }
 
@@ -115,38 +117,51 @@ namespace Gowtu
         {
             get
             {
-                return specular;
+                return m_specular;
             }
             set
             {
-                specular = value;
+                m_specular = value;
+            }
+        }
+
+        public static Light mainLight
+        {
+            get
+            {
+                return m_mainLight;
             }
         }
 
         public Light() : base()
         {
-            type = LightType.Directional;
-            color = Color.White;
-            ambient = Color.White;
-            diffuse = Color.White;
-            specular = Color.White;
-            strength = 1.0f;
-            constant = 1.0f;
-            linear = 0.09f;
-            quadratic = 0.032f;
+            m_type = LightType.Directional;
+            m_color = Color.White;
+            m_ambient = Color.White;
+            m_diffuse = Color.White;
+            m_specular = Color.White;
+            m_strength = 1.0f;
+            m_constant = 1.0f;
+            m_linear = 0.09f;
+            m_quadratic = 0.032f;
 
             InitializeLights();
         }
 
         internal override void OnInitializeComponent()
         {
-            for(int i = 0; i < lights.Count; i++)
+            for(int i = 0; i < m_lights.Count; i++)
             {
-                if(lights[i] == null)
+                if(m_lights[i] == null)
                 {
-                    lights[i] = this;
+                    m_lights[i] = this;
                     break;
                 }
+            }
+
+            if(m_mainLight == null)
+            {
+                m_mainLight = this;
             }
 
             UpdateUniformBuffer();
@@ -154,13 +169,18 @@ namespace Gowtu
 
         internal override void OnDestroyComponent()
         {
-            for(int i = 0; i < lights.Count; i++)
+            for(int i = 0; i < m_lights.Count; i++)
             {
-                if(lights[i] == this)
+                if(m_lights[i] == this)
                 {
-                    lights[i] = null;
+                    m_lights[i] = null;
                     break;
                 }
+            }
+
+            if(m_mainLight == this)
+            {
+                m_mainLight = null;
             }
 
             UpdateUniformBuffer();
@@ -168,21 +188,21 @@ namespace Gowtu
 
         private static void InitializeUniformBuffer()
         {
-            if(ubo != null)
+            if(m_ubo != null)
                 return;
 
-            ubo = Resources.FindUniformBuffer("Lights");
+            m_ubo = Resources.FindUniformBuffer(UBO_NAME);
         }
 
         private static void InitializeLights()
         {
-            if(lights == null)
+            if(m_lights == null)
             {
-                lights = new List<Light>();
+                m_lights = new List<Light>();
                 
                 for(int i = 0; i < MAX_LIGHTS; i++)
                 {
-                    lights.Add(null);
+                    m_lights.Add(null);
                 }
             }
         }
@@ -192,29 +212,29 @@ namespace Gowtu
             InitializeUniformBuffer();
             InitializeLights();
 
-            ubo.Bind();
+            m_ubo.Bind();
 
-            for(int i  = 0; i < lights.Count; i++)
+            for(int i  = 0; i < m_lights.Count; i++)
             {
-                Light light = lights[i];
+                Light light = m_lights[i];
                 UniformLightInfo info = new UniformLightInfo();
 
                 if(light != null)
                 {
                     info.isActive = light.gameObject.isActive ? 1 : 0;
-                    info.type = (int)light.type;
-                    info.constant = light.constant;
-                    info.linear = light.linear;
-                    info.quadratic = light.quadratic;
-                    info.strength = light.strength;
+                    info.type = (int)light.m_type;
+                    info.constant = light.m_constant;
+                    info.linear = light.m_linear;
+                    info.quadratic = light.m_quadratic;
+                    info.strength = light.m_strength;
                     info.padding1 = 0;
                     info.padding2 = 0;
                     info.position = new Vector4(light.gameObject.transform.position, 1.0f);
                     info.direction = new Vector4(light.gameObject.transform.forward, 1.0f);
-                    info.color = light.color;
-                    info.ambient = light.ambient;
-                    info.diffuse = light.diffuse;
-                    info.specular = light.specular;
+                    info.color = light.m_color;
+                    info.ambient = light.m_ambient;
+                    info.diffuse = light.m_diffuse;
+                    info.specular = light.m_specular;
                 }
                 else
                 {
@@ -222,10 +242,10 @@ namespace Gowtu
                 }
 
                 ReadOnlySpan<UniformLightInfo> s = new ReadOnlySpan<UniformLightInfo>(info);
-                ubo.BufferSubData<UniformLightInfo>(s, i * Marshal.SizeOf<UniformLightInfo>());
+                m_ubo.BufferSubData<UniformLightInfo>(s, i * Marshal.SizeOf<UniformLightInfo>());
             }
 
-            ubo.Unbind();
+            m_ubo.Unbind();
         }
     }
 

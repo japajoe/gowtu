@@ -54,11 +54,10 @@ namespace GowtuApp
 
         private void Start()
         {
+            //At least one camera should exist in order to render objects
             var camera = new GameObject();
+            camera.AddComponent<Camera>();
             camera.transform.position = new Vector3(0, 1, 4);
-            
-            //Main camera must be assigned in order to render objects
-            Camera.mainCamera = camera.AddComponent<Camera>();
             
             //To control camera use WASD (R to go up, F to go down)
             //Hold right mouse button to rotate
