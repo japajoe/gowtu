@@ -66,6 +66,7 @@ namespace GowtuApp
 
             //This will light things up :)
             light = new GameObject();
+            light.AddComponent<Light>();
             light.transform.position = new Vector3(100, 200, 100);
             light.transform.LookAt(transform);
 
