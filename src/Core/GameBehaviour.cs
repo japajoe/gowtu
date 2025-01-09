@@ -103,6 +103,10 @@ namespace Gowtu
                 {
                     behaviour.ResourceLoaded += (Action<Resource>)del;
                 }
+                else if (methods[i].Name == "OnResourceBatchLoaded")
+                {
+                    behaviour.ResourceBatchLoaded += (Action<ResourceBatch>)del;
+                }
             }
 
             behaviour.instanceId = m.instanceId;
@@ -203,13 +207,23 @@ namespace Gowtu
             }
         }
 
-        internal static void OnResourceLoaded(Resource resource)
+        internal static void OnBehaviourResourceLoaded(Resource resource)
         {
             for(int i = 0; i < behaviours.Count; i++)
             {
                 //Dispatch to any behaviour implementing this method, 
                 //regardless if it is active or not
                 behaviours[i].OnResourceLoaded(resource);
+            }
+        }
+
+        internal static void OnBehaviourResourceBatchLoaded(ResourceBatch batch)
+        {
+            for(int i = 0; i < behaviours.Count; i++)
+            {
+                //Dispatch to any behaviour implementing this method, 
+                //regardless if it is active or not
+                behaviours[i].OnResourceBatchLoaded(batch);
             }
         }
     }
@@ -229,6 +243,7 @@ namespace Gowtu
         public event Action ApplicationQuit;
         public event Action Render;
         public event Action<Resource> ResourceLoaded;
+        public event Action<ResourceBatch> ResourceBatchLoaded;
 
         private Component behaviour;
 
@@ -295,6 +310,11 @@ namespace Gowtu
         public void OnResourceLoaded(Resource resource)
         {
             ResourceLoaded?.Invoke(resource);
+        }
+
+        public void OnResourceBatchLoaded(ResourceBatch batch)
+        {
+            ResourceBatchLoaded?.Invoke(batch);
         }
     }
 }

@@ -36,6 +36,7 @@ namespace Gowtu
         private static Dictionary<string,AudioClip> audioClips = new Dictionary<string, AudioClip>();
         private static Dictionary<string,UniformBufferObject> uniformBuffers = new Dictionary<string, UniformBufferObject>();
         private static ConcurrentQueue<Resource> resourceQueue = new ConcurrentQueue<Resource>();
+        private static ConcurrentQueue<ResourceBatch> resourceBatchQueue = new ConcurrentQueue<ResourceBatch>();
 
         public static Shader AddShader(string name, Shader shader)
         {
@@ -284,7 +285,16 @@ namespace Gowtu
                 //Only dispatch 1 resource per frame in order not to lock the thread
                 if(resourceQueue.TryDequeue(out Resource resource))
                 {
-                    GameBehaviour.OnResourceLoaded(resource);
+                    GameBehaviour.OnBehaviourResourceLoaded(resource);
+                }
+            }
+
+            if(resourceBatchQueue.Count > 0)
+            {
+                //Only dispatch 1 resource batch per frame in order not to lock the thread
+                if(resourceBatchQueue.TryDequeue(out ResourceBatch batch))
+                {
+                    GameBehaviour.OnBehaviourResourceBatchLoaded(batch);
                 }
             }
         }
@@ -356,6 +366,50 @@ namespace Gowtu
                 }                
             });            
         }
+
+        public static void LoadAsyncBatchFromAssetPack(string pathToAssetPack, string assetPackKey, ResourceType type, List<string> resources)
+        {
+            if(!System.IO.File.Exists(pathToAssetPack))
+            {
+                System.Console.WriteLine("The file does not exist: " + pathToAssetPack);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                using(AssetPack pack = new AssetPack(pathToAssetPack, assetPackKey))
+                {
+                    if(pack.Loaded)
+                    {
+                        ResourceBatch batch = new ResourceBatch(type);
+
+                        for(int i = 0; i < resources.Count; i++)
+                        {
+                            Resource asset = new Resource();
+                            asset.info = new ResourceInfo();
+                            asset.info.filePath = resources[i];
+                            asset.info.type = type;
+
+                            if(!pack.FileExists(resources[i]))
+                            {
+                                await Task.Delay(1);
+                                asset.data = null;
+                                asset.info.result = ResourceLoadResult.Error;
+                                batch.resources.Add(asset);
+                            }
+                            else
+                            {
+                                asset.data = await pack.GetFileBufferAsync(resources[i]);
+                                asset.info.result = ResourceLoadResult.Ok;
+                                batch.resources.Add(asset);
+                            }
+                        }
+
+                        resourceBatchQueue.Enqueue(batch);
+                    }
+                }                
+            });            
+        }
     }
 
     public enum ResourceType
@@ -398,5 +452,17 @@ namespace Gowtu
     {
         public ResourceInfo info;
         public byte[] data;
+    }
+
+    public class ResourceBatch
+    {
+        public ResourceType type;
+        public List<Resource> resources;
+
+        public ResourceBatch(ResourceType type)
+        {
+            this.type = type;
+            this.resources = new List<Resource>();
+        }
     }
 }
