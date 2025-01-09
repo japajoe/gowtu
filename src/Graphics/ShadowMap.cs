@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -30,7 +31,7 @@ namespace Gowtu
 {
     public sealed class ShadowMap
     {
-        public static readonly uint UBO_BINDING_INDEX = 4;
+        public static readonly uint UBO_BINDING_INDEX = 3;
         public static readonly string UBO_NAME = "Shadow";
 
         private int m_lightFBO;
@@ -96,69 +97,37 @@ namespace Gowtu
         public void Bind()
         {
             Camera camera = Camera.mainCamera;
+            
             if(camera == null)
                 return;
 
-            GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
-
-            // 0. UBO setup
-            var lightMatrices = GetLightSpaceMatrices();
-
-            unsafe
-            {
-                for(int i = 0; i < lightMatrices.Count; i++)
-                {
-                    int index = i * 16 * sizeof(float);
-                    var matrix = lightMatrices[i];
-                    float *pSrc = &matrix.Row0.X;
-                    fixed(float *pDst = &shadowData.lightSpaceMatrices[index])
-                    {
-                        Unsafe.CopyBlock(pDst, pSrc, 16 * 4);
-                    }
-                }
-            }
-
-            // Hack because OpenGL adds 12 bytes padding for each float in an array
-            // The alignment will therefor be on a 16 byte boundary
-            unsafe
-            {
-                int index = 0;
-
-                for(int i = 0; i < shadowCascadeLevels.Count; i++)
-                {
-                    shadowData.cascadePlaneDistances[index+0] = shadowCascadeLevels[i];
-                    //Don't need to set these because they are padding
-                    //shadowData.cascadePlaneDistances[index+1] = shadowCascadeLevels[i];
-                    //shadowData.cascadePlaneDistances[index+2] = shadowCascadeLevels[i];
-                    //shadowData.cascadePlaneDistances[index+3] = shadowCascadeLevels[i];
-                    index += 4;
-                }
-            }
-            
-            shadowData.farPlane = camera.farClippingPlane;
-            shadowData.shadowBias = 0.005f;
-
-            UniformShadowInfo[] data = new UniformShadowInfo[1]
-            {
-                shadowData
-            };
-
-            m_ubo.Bind();
-            m_ubo.BufferSubData<UniformShadowInfo>(data, 0);
-            m_ubo.Unbind();
-
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, m_lightFBO);
             GL.Viewport(0, 0, (int)m_depthMap.Width, (int)m_depthMap.Height);
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             GL.Clear(ClearBufferMask.DepthBufferBit);
             GL.CullFace(TriangleFace.Front);  // peter panning
+        }
+
+        public void Unbind()
+        {
+            var viewportRect = Graphics.GetViewport();
+            GL.CullFace(TriangleFace.Back);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.Viewport(0, 0, (int)viewportRect.width, (int)viewportRect.height);
         }
 
         public void UpdateUniformBuffer()
         {
             Camera camera = Camera.mainCamera;
+            
             if(camera == null)
                 return;
+
+            shadowData = new UniformShadowInfo();
+            shadowData.farPlane = camera.farClippingPlane;
+            shadowData.shadowBias = 0.005f;
+            shadowData.cascadeCount = shadowCascadeLevels.Count;
+            shadowData.enabled = m_enabled ? 1 : 0;
 
             var lightMatrices = GetLightSpaceMatrices();
 
@@ -166,12 +135,12 @@ namespace Gowtu
             {
                 for(int i = 0; i < lightMatrices.Count; i++)
                 {
-                    int index = i * 16 * sizeof(float);
+                    int index = i * Marshal.SizeOf<Matrix4>();
                     var matrix = lightMatrices[i];
                     float *pSrc = &matrix.Row0.X;
-                    fixed(float *pDst = &shadowData.lightSpaceMatrices[index])
+                    fixed(byte *pDst = &shadowData.lightSpaceMatrices[index])
                     {
-                        Unsafe.CopyBlock(pDst, pSrc, 16 * 4);
+                        Unsafe.CopyBlock(pDst, pSrc, (uint)Marshal.SizeOf<Matrix4>());
                     }
                 }
             }
@@ -180,29 +149,22 @@ namespace Gowtu
             // The alignment will therefor be on a 16 byte boundary
             unsafe
             {
-                int index = 0;
-
                 for(int i = 0; i < shadowCascadeLevels.Count; i++)
                 {
-                    shadowData.cascadePlaneDistances[index+0] = shadowCascadeLevels[i];
-                    //Don't need to set these because they are padding
-                    //shadowData.cascadePlaneDistances[index+1] = shadowCascadeLevels[i];
-                    //shadowData.cascadePlaneDistances[index+2] = shadowCascadeLevels[i];
-                    //shadowData.cascadePlaneDistances[index+3] = shadowCascadeLevels[i];
-                    index += 4;
+                    int index = i * Marshal.SizeOf<Vector4>();
+
+                    fixed(byte *pData = &shadowData.cascadePlaneDistances[index])
+                    {
+                        float *pFloat = (float*)pData;
+                        *pFloat = shadowCascadeLevels[i];
+                    }
+                    
                 }
             }
-            
-            shadowData.farPlane = camera.farClippingPlane;
-            shadowData.shadowBias = 0.005f;
-
-            UniformShadowInfo[] data = new UniformShadowInfo[1]
-            {
-                shadowData
-            };
 
             m_ubo.Bind();
-            m_ubo.BufferSubData<UniformShadowInfo>(data, 0);
+            ReadOnlySpan<UniformShadowInfo> s = new ReadOnlySpan<UniformShadowInfo>(shadowData);
+            m_ubo.BufferSubData<UniformShadowInfo>(s, 0);
             m_ubo.Unbind();
         }
 
@@ -216,6 +178,7 @@ namespace Gowtu
             var corners = GetFrustumCornersWorldSpace(proj, camera.GetViewMatrix());
 
             Vector3 center = new Vector3(0, 0, 0);
+
             foreach (var v in corners)
             {
                 center += v.Xyz;
@@ -327,7 +290,8 @@ namespace Gowtu
         public float shadowBias;
         public float farPlane;
         public int enabled;
-        public fixed float lightSpaceMatrices[16*16]; // 16 matrices of 4x4 (16 floats each)
-        public fixed float cascadePlaneDistances[16*4]; //16 floats with 12 bytes padding each
+        public fixed byte lightSpaceMatrices[16*16*4]; // 16 matrices of 4x4 (16 floats each)
+        public fixed byte cascadePlaneDistances[16*16]; //16 floats with 12 bytes padding each
     }
 }
+

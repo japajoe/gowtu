@@ -157,6 +157,13 @@ namespace Gowtu
             }
         }
 
+        public Texture2D(int id, uint width, uint height)
+        {
+            this.id = id;
+            this.width = width;
+            this.height = height;
+        }
+
         public override void Bind(int unit)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + (uint)unit);

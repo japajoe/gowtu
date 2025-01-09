@@ -27,6 +27,8 @@ namespace Gowtu
     public abstract class Renderer : Component
     {
         protected uint m_renderQueue;
+        protected bool m_castShadows;
+        protected bool m_receiveShadows;
 
         public uint renderQueue
         {
@@ -40,9 +42,35 @@ namespace Gowtu
             }
         }
 
+        public bool castShadows
+        {
+            get
+            {
+                return m_castShadows;
+            }
+            set
+            {
+                m_castShadows = value;
+            }
+        }
+        
+        public bool receiveShadows
+        {
+            get
+            {
+                return m_receiveShadows;
+            }
+            set
+            {
+                m_receiveShadows = value;
+            }
+        }
+
         public Renderer() : base()
         {
             m_renderQueue = 1000;
+            castShadows = true;
+            receiveShadows = true;
         }
 
         internal override void OnInitializeComponent()
@@ -53,6 +81,11 @@ namespace Gowtu
         internal override void OnDestroyComponent()
         {
             Graphics.Remove(this);
+        }
+
+        virtual internal void OnRender(Material material)
+        {
+
         }
 
         virtual internal void OnRender()

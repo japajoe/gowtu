@@ -12,10 +12,12 @@ uniform sampler2D uTexture1;
 uniform sampler2D uTexture2;
 uniform sampler2D uTexture3;
 uniform sampler2D uTexture4;
+uniform sampler2DArray uDepthMap;
 uniform vec2 uUVScale1;
 uniform vec2 uUVScale2;
 uniform vec2 uUVScale3;
 uniform vec2 uUVScale4;
+uniform int uReceiveShadows;
 
 #define MAX_NUM_LIGHTS 32
 
@@ -79,6 +81,71 @@ vec4 gamma_correction(vec4 color) {
     return vec4(pow(vec3(color.xyz), vec3(1.0/2.2)), color.a);
 }
 
+float calculate_shadow(vec3 fragPosWorldSpace, mat4 view, vec3 normal, vec3 lightDirection) {
+    if(uReceiveShadows < 1)
+        return 0.0;
+
+    if(uShadow.enabled < 1)
+        return 0.0;
+
+    // select cascade layer
+    vec4 fragPosViewSpace = view * vec4(fragPosWorldSpace, 1.0);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    
+    for (int i = 0; i < uShadow.cascadeCount; ++i) {
+        if (depthValue < uShadow.cascadePlaneDistances[i]) {
+            layer = i;
+            break;
+        }
+    }
+    
+    if (layer == -1) {
+        layer = uShadow.cascadeCount;
+    }
+
+    vec4 fragPosLightSpace = uShadow.lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0) {
+        return 0.0;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    normal = normalize(normal);
+    float maxBias = uShadow.shadowBias; //default 0.005f;
+    float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), maxBias);
+    const float biasModifier = 0.5f;
+
+    if (layer == uShadow.cascadeCount) {
+        bias *= 1 / (uShadow.farPlane * biasModifier);
+    } else {
+        bias *= 1 / (uShadow.cascadePlaneDistances[layer] * biasModifier);
+    }
+
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / vec2(textureSize(uDepthMap, 0));
+
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(uDepthMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    
+    shadow /= 9.0;
+        
+    return shadow;
+}
+
 vec3 calculate_lighting(vec3 fragPosition, vec3 cameraPosition, vec3 normal, vec3 texColor, vec3 diffuseColor, float ambientStrength, float shininess) {
     vec3 ambient = vec3(0.0);
     vec3 diffuse = vec3(0.0);
@@ -117,7 +184,12 @@ vec3 calculate_lighting(vec3 fragPosition, vec3 cameraPosition, vec3 normal, vec
         }
     }
 
-    vec3 lighting = (ambient * (diffuse + specular)) * texColor.rgb * diffuseColor.rgb;
+    vec3 lightDirection = normalize(uLights.lights[0].direction.xyz);
+    float shadow = calculate_shadow(oFragPosition, uCamera.view, normal, lightDirection);
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * texColor.rgb * diffuseColor.rgb;
+    
+    //vec3 lighting = (ambient * (diffuse + specular)) * texColor.rgb * diffuseColor.rgb;
+    
     return lighting;
 }
 

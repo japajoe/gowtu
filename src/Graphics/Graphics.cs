@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 
 namespace Gowtu
 {
@@ -63,11 +64,21 @@ namespace Gowtu
         private static PriorityQueue<Renderer, uint> renderQueue = new PriorityQueue<Renderer, uint>();
         private static ImGuiController imgui = null;
         private static ShadowMap shadowMap = null;
+        private static DepthMaterial depthMaterial;
 
         internal static void Initialize()
         {
+            CreateResources();
+            
+            GameObject camera = new GameObject();
+            camera.AddComponent<Camera>();
+
+            GameObject light = new GameObject();
+            light.AddComponent<Light>();
+
             imgui = new ImGuiController();
             shadowMap = new ShadowMap();
+            depthMaterial = new DepthMaterial();
         }
 
         internal static void Deinitialize()
@@ -75,40 +86,137 @@ namespace Gowtu
             imgui.Dispose();
         }
 
+        private static void CreateResources()
+        {
+            Resources.AddTexture("Default", new Texture2D(2, 2, Color.White));
+            var depthmap = Resources.AddTexture("Depth", new Texture2DArray(2048, 2048, 5));
+
+            GL.ObjectLabel(ObjectIdentifier.Texture, (uint)depthmap.Id, -1, "DepthTexture");
+            
+            var diffuseShader = Resources.AddShader("Diffuse", new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
+            var skyboxShader = Resources.AddShader("Skybox", new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
+            var terrainShader = Resources.AddShader("Terrain", new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
+            var depthShader = Resources.AddShader("Depth", new Shader(DepthShader.vertexSource, DepthShader.fragmentSource, DepthShader.geometrySource));
+
+            Resources.AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
+            Resources.AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
+            Resources.AddMesh("Quad", MeshGenerator.CreateQuad(new Vector3(1, 1, 1)));
+            Resources.AddMesh("Sphere", MeshGenerator.CreateSphere(new Vector3(1, 1, 1)));
+            Resources.AddMesh("Skybox", MeshGenerator.CreateSkybox(new Vector3(1, 1, 1)));
+
+            var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, Light.UBO_NAME);
+            var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, Camera.UBO_NAME);
+            var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, World.UBO_NAME);
+            var uboShadow = CreateUniformBuffer<UniformShadowInfo>(ShadowMap.UBO_BINDING_INDEX, 1, ShadowMap.UBO_NAME);
+
+            uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+
+            uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+
+            uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+
+            uboShadow.BindBlockToShader(diffuseShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+            uboShadow.BindBlockToShader(terrainShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+            uboShadow.BindBlockToShader(depthShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+        }
+
+        private static UniformBufferObject CreateUniformBuffer<T>(uint bindingIndex, uint numItems, string name) where T : unmanaged
+        {
+            UniformBufferObject ubo = new UniformBufferObject();
+            ubo.Generate();
+            ubo.Bind();
+
+            T[] data = new T[numItems];
+            
+            ubo.BufferData<T>(data, BufferUsageARB.DynamicDraw);
+            ubo.BindBufferBase(bindingIndex);
+            ubo.Unbind();
+
+            ubo.ObjectLabel(name);
+
+            return Resources.AddUniformBuffer(name, ubo);
+        }
+
         internal static void NewFrame()
         {
-            Camera mainCamera = Camera.mainCamera;
-            Color clearColor = mainCamera == null ? Color.White : mainCamera.clearColor;
-            GL.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            UpdateUniformBuffers();
 
-            Light.UpdateUniformBuffer();
-            Camera.UpdateUniformBuffer();
-            World.UpdateUniformBuffer();
-
-            if(mainCamera == null)
+            if(Camera.mainCamera == null)
             {
                 Console.WriteLine("Can't render because no main camera has been set");
             }
             else
             {
-                for(int i = 0; i < renderers.Count; i++)
-                {
-                    renderQueue.Enqueue(renderers[i], renderers[i].renderQueue);
-                }
+                RenderShadowPass();
+                Render3DPass();
+            }
+            
+            Render2DPass();
+        }
 
-                if(renderQueue.Count > 0)
-                {
-                    while(renderQueue.Count > 0)
-                    {
-                        Renderer renderer = renderQueue.Dequeue();
-                        renderer.OnRender();
-                    }
-                }
+        private static void Clear()
+        {
+            Color clearColor = Camera.mainCamera == null ? Color.White : Camera.mainCamera.clearColor;
+            GL.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        }
+
+        private static void UpdateUniformBuffers()
+        {
+            Light.UpdateUniformBuffer();
+            Camera.UpdateUniformBuffer();
+            World.UpdateUniformBuffer();
+            shadowMap.UpdateUniformBuffer();
+        }
+
+        private static void RenderShadowPass()
+        {
+            for(int i = 0; i < renderers.Count; i++)
+            {
+                renderQueue.Enqueue(renderers[i], renderers[i].renderQueue);
             }
 
-            Graphics2D.NewFrame();
+            if(renderQueue.Count > 0)
+            {
+                shadowMap.Bind();
 
+                while(renderQueue.Count > 0)
+                {
+                    Renderer renderer = renderQueue.Dequeue();
+                    if(renderer.castShadows)
+                        renderer.OnRender(depthMaterial);
+                }
+
+                shadowMap.Unbind();
+            }
+        }
+
+        private static void Render3DPass()
+        {
+            Clear();
+
+            for(int i = 0; i < renderers.Count; i++)
+            {
+                renderQueue.Enqueue(renderers[i], renderers[i].renderQueue);
+            }
+
+            if(renderQueue.Count > 0)
+            {
+                while(renderQueue.Count > 0)
+                {
+                    Renderer renderer = renderQueue.Dequeue();
+                    renderer.OnRender();
+                }
+            }
+        }
+
+        private static void Render2DPass()
+        {
+            Graphics2D.NewFrame();
             imgui.NewFrame();
             GameBehaviour.OnBehaviourGUI();
             imgui.EndFrame();

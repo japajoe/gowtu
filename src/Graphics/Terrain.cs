@@ -73,6 +73,8 @@ namespace Gowtu
             resolution = new Vector2(128, 128);
             scale = new Vector3(10, 10, 10);
             maxHeight = 128.0f;
+            castShadows = false;
+            receiveShadows = true;
         }
 
         internal override void OnInitializeComponent()
@@ -133,6 +135,45 @@ namespace Gowtu
                 if(!camera.frustum.Contains(bounds))
                     return;
             }
+
+            GLState.DepthTest(true);
+            GLState.CullFace(true);
+            GLState.BlendMode(false);
+            GLState.SetDepthFunc(DepthFunction.Less);
+
+            material.Use(transform, camera);
+
+            mesh.VAO.Bind();
+
+            if(mesh.EBO.Id > 0)
+                GL.DrawElements(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, mesh.IndiceCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+            else
+                GL.DrawArrays(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, 0, mesh.VertexCount);
+            
+            mesh.VAO.Unbind();
+        }
+
+        internal override void OnRender(Material material)
+        {
+            if(!gameObject.isActive)
+                return;
+
+            Camera camera = Camera.mainCamera;
+
+            if(camera == null || transform == null)
+                return;
+
+            if(mesh == null)
+                return;
+
+            if(mesh.VAO.Id == 0)
+                return;
+            
+            if(material == null)
+                return;
+            
+            if(material.Shader == null)
+                return;
 
             GLState.DepthTest(true);
             GLState.CullFace(true);

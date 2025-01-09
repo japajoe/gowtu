@@ -90,5 +90,30 @@ namespace Gowtu
         {
             GL.BindTexture(TextureTarget.Texture2dArray, 0);
         }
+
+        public Texture2D GetTexture2DAtLevel(uint level)
+        {
+            if(id == 0)
+                return null;
+
+            if(level >= depth)
+                return null;
+
+            int texture = GL.GenTexture();
+
+            GL.BindTexture(TextureTarget.Texture2dArray, id);
+
+            // Create a temporary buffer to hold the pixel data
+            byte[] pixelData = new byte[width * height * 4]; // Assuming RGBA format
+
+            // Copy the specific layer from the texture array
+            GL.CopyImageSubData((uint)id, CopyImageSubDataTarget.Texture2dArray, 0, 0, 0, (int)level,
+                                (uint)texture, CopyImageSubDataTarget.Texture2d, 0, 0, 0, 0,
+                                (int)width, (int)height, (int)depth);
+
+            GL.BindTexture(TextureTarget.Texture2dArray, id);
+
+            return new Texture2D(texture, width, height);
+        }
     }
 }

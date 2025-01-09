@@ -96,8 +96,9 @@ namespace Gowtu
                 return;
             }
 
-            GLFW.WindowHint(GLFW.CONTEXT_VERSION_MAJOR, 3);
-            GLFW.WindowHint(GLFW.CONTEXT_VERSION_MINOR, 3);
+            //OpenGL version needs to be at least 4.2 for using 'invocations' in geometry shader
+            GLFW.WindowHint(GLFW.CONTEXT_VERSION_MAJOR, 4);
+            GLFW.WindowHint(GLFW.CONTEXT_VERSION_MINOR, 2);
             GLFW.WindowHint(GLFW.OPENGL_PROFILE, GLFW.OPENGL_CORE_PROFILE);
             GLFW.WindowHint(GLFW.VISIBLE, GLFW.FALSE);
             GLFW.WindowHint(GLFW.SAMPLES, 4);
@@ -176,6 +177,30 @@ namespace Gowtu
             GLFW.SetMouseButtonCallback(window, OnMouseButtonPress);
             GLFW.SetScrollCallback(window, OnMouseScroll);
 
+            OnInitialize();
+
+            GLFW.ShowWindow(window);
+
+            while(GLFW.WindowShouldClose(window) == 0)
+            {
+                OnNewFrame();
+                OnEndFrame();
+                GLFW.PollEvents();
+                GLFW.SwapBuffers(window);
+            }
+
+            OnClosing();
+
+            GLFW.DestroyWindow(window);
+
+            window = IntPtr.Zero;
+            nativeWindow = IntPtr.Zero;
+
+            GLFW.Terminate();
+        }
+
+        private void OnInitialize()
+        {
             if(AudioSettings.Load("audiosettings.dat"))
             {
                 var deviceInfo = new MiniAudioEx.DeviceInfo(IntPtr.Zero, AudioSettings.DeviceId);
@@ -186,37 +211,12 @@ namespace Gowtu
                 Audio.Initialize(44100, 2);
             }
 
-            //Loads default shaders/textures/meshes
-            Resources.LoadDefault();
-
             Graphics.Initialize();
 
             Load?.Invoke();
+        }        
 
-            GLFW.ShowWindow(window);
-
-            while(GLFW.WindowShouldClose(window) == 0)
-            {
-                NewFrame();
-                EndFrame();
-                GLFW.PollEvents();
-                GLFW.SwapBuffers(window);
-            }
-
-            GameBehaviour.OnApplicationClosing();
-
-            Audio.Deinitialize();
-            Graphics.Deinitialize();
-
-            GLFW.DestroyWindow(window);
-
-            window = IntPtr.Zero;
-            nativeWindow = IntPtr.Zero;
-
-            GLFW.Terminate();
-        }
-
-        private void NewFrame()
+        private void OnNewFrame()
         {
             Time.NewFrame();
             Input.NewFrame();
@@ -226,10 +226,17 @@ namespace Gowtu
             Graphics.NewFrame();
         }
 
-        private void EndFrame()
+        private void OnEndFrame()
         {
             Input.EndFrame();
             GameObject.EndFrame();
+        }
+
+        private void OnClosing()
+        {
+            GameBehaviour.OnApplicationClosing();
+            Audio.Deinitialize();
+            Graphics.Deinitialize();
         }
 
         public static void Quit()

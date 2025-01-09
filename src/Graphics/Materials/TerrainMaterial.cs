@@ -35,7 +35,6 @@ namespace Gowtu
         private int uTexture2;
         private int uTexture3;
         private int uTexture4;
-        private int uDepthMap;
         private int uUVScale1;
         private int uUVScale2;
         private int uUVScale3;
@@ -43,12 +42,15 @@ namespace Gowtu
         private int uAmbientStrength;
         private int uShininess;
         private int uDiffuseColor;
+        private int uDepthMap;
+        private int uReceiveShadows;
 
         private Texture2D splatMap;
         private Texture2D texture1;
         private Texture2D texture2;
         private Texture2D texture3;
-        private Texture2D texture4;        
+        private Texture2D texture4;    
+        private Texture2DArray depthMap;    
         private Vector2 uvScale1;
         private Vector2 uvScale2;
         private Vector2 uvScale3;
@@ -56,6 +58,7 @@ namespace Gowtu
         private Color diffuseColor;
         private float ambientStrength;
         private float shininess;
+        private bool receiveShadows;
 
         public Texture2D SplatMap
         {
@@ -201,6 +204,18 @@ namespace Gowtu
             }
         }
 
+        public bool ReceiveShadows
+        {
+            get
+            {
+                return receiveShadows;
+            }
+            set
+            {
+                receiveShadows = value;
+            }
+        }
+
         public TerrainMaterial() : base()
         {
             var defaultTexture = Resources.FindTexture<Texture2D>("Default");
@@ -210,13 +225,15 @@ namespace Gowtu
             texture2 = defaultTexture;
             texture3 = defaultTexture;
             texture4 = defaultTexture;
+            depthMap = Resources.FindTexture<Texture2DArray>("Depth");
             diffuseColor = Color.White;
-            ambientStrength = 1.0f;
+            ambientStrength = 0.5f;
             shininess = 16.0f;
             uvScale1 = new Vector2(1, 1);
             uvScale2 = new Vector2(1, 1);
             uvScale3 = new Vector2(1, 1);
             uvScale4 = new Vector2(1, 1);
+            receiveShadows = true;
 
             shader = Resources.FindShader("Terrain");
 
@@ -230,7 +247,6 @@ namespace Gowtu
                 uTexture2 = GL.GetUniformLocation(shader.Id, "uTexture2");
                 uTexture3 = GL.GetUniformLocation(shader.Id, "uTexture3");
                 uTexture4 = GL.GetUniformLocation(shader.Id, "uTexture4");
-                uDepthMap = GL.GetUniformLocation(shader.Id, "uDepthMap");
                 uUVScale1 = GL.GetUniformLocation(shader.Id, "uUVScale1");
                 uUVScale2 = GL.GetUniformLocation(shader.Id, "uUVScale2");
                 uUVScale3 = GL.GetUniformLocation(shader.Id, "uUVScale3");
@@ -238,6 +254,8 @@ namespace Gowtu
                 uAmbientStrength = GL.GetUniformLocation(shader.Id, "uAmbientStrength");
                 uShininess = GL.GetUniformLocation(shader.Id, "uShininess");
                 uDiffuseColor = GL.GetUniformLocation(shader.Id, "uDiffuseColor");
+                uDepthMap = GL.GetUniformLocation(shader.Id, "uDepthMap");
+                uReceiveShadows = GL.GetUniformLocation(shader.Id, "uReceiveShadows");
             }
         }
 
@@ -291,6 +309,13 @@ namespace Gowtu
                 unit++;
             }
 
+            if(depthMap != null)
+            {
+                depthMap.Bind(unit);
+                shader.SetInt(uDepthMap, unit);
+                unit++;
+            }
+
             shader.SetMat4(uModel, model);
             shader.SetMat3(uModelInverted, modelInverted);
             shader.SetMat4(uMVP, MVP);
@@ -301,6 +326,7 @@ namespace Gowtu
             shader.SetFloat2(uUVScale2, uvScale2);
             shader.SetFloat2(uUVScale3, uvScale3);
             shader.SetFloat2(uUVScale4, uvScale4);
+            shader.SetInt(uReceiveShadows, receiveShadows ? 1 : 0);
         }
     }
 }

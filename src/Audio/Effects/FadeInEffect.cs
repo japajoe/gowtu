@@ -37,7 +37,7 @@ namespace Gowtu
                 // Calculate the fade factor based on processed frames
                 float fadeFactor = Math.Min(1.0f, processedFrames * fadeStep);
 
-                fadeFactor = EaseOutCubic(fadeFactor);
+                fadeFactor = fadeFactor < 1.0f ? EaseOutCubic(fadeFactor) : fadeFactor;
 
                 for (int j = 0; j < channels; j++)
                 {

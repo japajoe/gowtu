@@ -36,13 +36,17 @@ namespace Gowtu
         private int uShininess;
         private int uUVScale;
         private int uUVOffset;
+        private int uDepthMap;
+        private int uReceiveShadows;
 
         private Texture2D diffuseTexture;
+        private Texture2DArray depthMap;
         private Color diffuseColor;
         private float ambientStrength;
         private float shininess;
         private Vector2 uvScale;
         private Vector2 uvOffset;
+        private bool receiveShadows;
 
         public Texture2D DiffuseTexture
         {
@@ -115,15 +119,29 @@ namespace Gowtu
             }
         }
 
+        public bool ReceiveShadows
+        {
+            get
+            {
+                return receiveShadows;
+            }
+            set
+            {
+                receiveShadows = value;
+            }
+        }
+
         public DiffuseMaterial() : base()
         {
             shader = Resources.FindShader("Diffuse");
             diffuseTexture = Resources.FindTexture<Texture2D>("Default");
+            depthMap = Resources.FindTexture<Texture2DArray>("Depth");
             diffuseColor = Color.White;
-            ambientStrength = 1.0f;
+            ambientStrength = 0.5f;
             shininess = 16.0f;
             uvScale = new Vector2(1, 1);
             uvOffset = new Vector2(0, 0);
+            receiveShadows = true;
 
             if(shader != null)
             {
@@ -136,6 +154,8 @@ namespace Gowtu
                 uShininess = GL.GetUniformLocation(shader.Id, "uShininess");
                 uUVScale = GL.GetUniformLocation(shader.Id, "uUVScale");
                 uUVOffset = GL.GetUniformLocation(shader.Id, "uUVOffset");
+                uDepthMap = GL.GetUniformLocation(shader.Id, "uDepthMap");
+                uReceiveShadows = GL.GetUniformLocation(shader.Id, "uReceiveShadows");
             }
         }
 
@@ -161,6 +181,13 @@ namespace Gowtu
                 unit++;
             }
 
+            if(depthMap != null)
+            {
+                depthMap.Bind(unit);
+                shader.SetInt(uDepthMap, unit);
+                unit++;
+            }
+
             shader.SetMat4(uModel, model);
             shader.SetMat3(uModelInverted, modelInverted);
             shader.SetMat4(uMVP, MVP);
@@ -169,6 +196,7 @@ namespace Gowtu
             shader.SetFloat(uShininess, shininess);
             shader.SetFloat2(uUVScale, uvScale);
             shader.SetFloat2(uUVOffset, uvOffset);
+            shader.SetInt(uReceiveShadows, receiveShadows ? 1 : 0);
         }
     }
 }

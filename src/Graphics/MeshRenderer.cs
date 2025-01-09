@@ -158,6 +158,55 @@ namespace Gowtu
                 mesh.VAO.Unbind();
             }
         }
+
+        internal override void OnRender(Material material)
+        {
+            if(!gameObject.isActive)
+                return;
+
+            if(data.Count == 0)
+                return;
+            
+            Camera camera = Camera.mainCamera;
+
+            if(camera == null || transform == null)
+                return;
+
+            if(material == null)
+                return;
+            
+            if(material.Shader == null)
+                return;
+
+            for(int i = 0; i < data.Count; i++)
+            {
+                Mesh mesh = data[i].mesh;
+
+                if(mesh == null)
+                    continue;
+
+                if(mesh.VAO.Id == 0)
+                    continue;
+
+                RenderSettings settings = data[i].settings;
+
+                GLState.DepthTest(settings.depthTest);
+                GLState.CullFace(settings.cullFace);
+                GLState.BlendMode(settings.alphaBlend);
+                GLState.SetDepthFunc(settings.depthFunc);
+
+                material.Use(transform, camera);
+
+                mesh.VAO.Bind();
+
+                if(mesh.EBO.Id > 0)
+                    GL.DrawElements(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, mesh.IndiceCount, DrawElementsType.UnsignedInt, IntPtr.Zero);
+                else
+                    GL.DrawArrays(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, 0, mesh.VertexCount);
+                
+                mesh.VAO.Unbind();
+            }
+        }
     }
 
     public class MeshRendererData

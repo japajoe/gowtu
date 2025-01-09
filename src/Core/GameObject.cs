@@ -254,6 +254,8 @@ namespace Gowtu
                     var mesh = Resources.FindMesh("Sphere");
                     var material = new SkyboxMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
+                    renderer.castShadows = false;
+                    renderer.receiveShadows = false;
                     renderer.Add(mesh, material);
                     renderer.renderQueue = 999;
                     var settings = renderer.GetSettings(0);

@@ -24,8 +24,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Mathematics;
 
 namespace Gowtu
 {
@@ -38,42 +36,6 @@ namespace Gowtu
         private static Dictionary<string,AudioClip> audioClips = new Dictionary<string, AudioClip>();
         private static Dictionary<string,UniformBufferObject> uniformBuffers = new Dictionary<string, UniformBufferObject>();
         private static ConcurrentQueue<Resource> resourceQueue = new ConcurrentQueue<Resource>();
-
-        internal static void LoadDefault()
-        {
-            AddTexture("Default", new Texture2D(2, 2, Color.White));
-            AddTexture("Depth", new Texture2DArray(2048, 2048, 5));
-            
-            var diffuseShader = AddShader("Diffuse", new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
-            var skyboxShader = AddShader("Skybox", new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
-            var terrainShader = AddShader("Terrain", new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
-            var depthShader = AddShader("Depth", new Shader(DepthShader.vertexSource, DepthShader.fragmentSource, DepthShader.geometrySource));
-
-            AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
-            AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
-            AddMesh("Quad", MeshGenerator.CreateQuad(new Vector3(1, 1, 1)));
-            AddMesh("Sphere", MeshGenerator.CreateSphere(new Vector3(1, 1, 1)));
-            AddMesh("Skybox", MeshGenerator.CreateSkybox(new Vector3(1, 1, 1)));
-
-            var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, Light.UBO_NAME);
-            var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, Camera.UBO_NAME);
-            var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, World.UBO_NAME);
-            var uboShadow = CreateUniformBuffer<UniformWorldInfo>(ShadowMap.UBO_BINDING_INDEX, 1, ShadowMap.UBO_NAME);
-
-            uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-            uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-
-            uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-            uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-
-            uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-
-            uboShadow.BindBlockToShader(diffuseShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
-            uboShadow.BindBlockToShader(terrainShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
-            uboShadow.BindBlockToShader(depthShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
-        }
 
         public static Shader AddShader(string name, Shader shader)
         {
@@ -172,23 +134,6 @@ namespace Gowtu
             Console.WriteLine("[AUDIOCLIP] {0} added with ID: {1}", name, audioClip.GetHashCode());
             
             return audioClips[name];
-        }
-
-        private static UniformBufferObject CreateUniformBuffer<T>(uint bindingIndex, uint numItems, string name) where T : unmanaged
-        {
-            UniformBufferObject ubo = new UniformBufferObject();
-            ubo.Generate();
-            ubo.Bind();
-
-            T[] data = new T[numItems];
-            
-            ubo.BufferData<T>(data, BufferUsageARB.DynamicDraw);
-            ubo.BindBufferBase(bindingIndex);
-            ubo.Unbind();
-
-            ubo.ObjectLabel(name);
-
-            return AddUniformBuffer(name, ubo);
         }
 
         public static UniformBufferObject AddUniformBuffer(string name, UniformBufferObject ubo)
