@@ -30,129 +30,51 @@ namespace Gowtu
         private int uModel;
         private int uView;
         private int uProjection;
-        private int uRayleighCoefficient;
-        private int uMieCoefficient;
-        private int uScatteringDirection;
-        private int uCloudSpeed;
-        private int uCirrus;
-        private int uCumulus;
-        private int uSunPosition;
+        private int uTexture;
+        private int uDiffuseColor;
 
-        private float cloudSpeed;
-        private float cirrus;
-        private float cumulus;
-        private float rayleighCoefficient;
-        private float mieCoefficient;
-        private float scatteringDirection;
-        private Vector3 sunPosition;
+        private TextureCubeMap texture;
+        private Color diffuseColor;
 
-        public float CloudSpeed
+        public TextureCubeMap Texture
         {
             get
             {
-                return cloudSpeed;
+                return texture;
             }
             set
             {
-                cloudSpeed = value;
+                texture = value;
             }
         }
 
-        public float Cirrus
+        public Color DiffuseColor
         {
             get
             {
-                return cirrus;
+                return diffuseColor;
             }
             set
             {
-                cirrus = value;
+                diffuseColor = value;
             }
         }
 
-        public float Cumulus
-        {
-            get
-            {
-                return cumulus;
-            }
-            set
-            {
-                cumulus = value;
-            }
-        }
-
-        public float RayleighCoefficient
-        {
-            get
-            {
-                return rayleighCoefficient;
-            }
-            set
-            {
-                rayleighCoefficient = value;
-            }
-        }
-
-        public float MieCoefficient
-        {
-            get
-            {
-                return mieCoefficient;
-            }
-            set
-            {
-                mieCoefficient = value;
-            }
-        }
-
-        public float ScatteringDirection
-        {
-            get
-            {
-                return scatteringDirection;
-            }
-            set
-            {
-                scatteringDirection = value;
-            }
-        }
-
-        public Vector3 SunPosition
-        {
-            get
-            {
-                return sunPosition;
-            }
-            set
-            {
-                sunPosition = value;
-            }
-        }
-        
         public SkyboxMaterial() : base()
         {
             shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderSkybox));
-            cloudSpeed = 0.1f;
-            cirrus = 0.677f;
-            cumulus = 0.403f;
-            rayleighCoefficient = 0.0075f;
-            mieCoefficient = 0.0153f;
-            scatteringDirection = 0.998f; // Mie scattering direction. Should be ALMOST 1.0f
-            sunPosition = new Vector3(-0.007f, 0.954f, -1.563f);
+
+            texture = Resources.FindTexture<TextureCubeMap>(Constants.GetString(ConstantString.TextureDefaultCubeMap));
+            diffuseColor = Color.White;
 
             if(shader != null)
             {
                 uModel = GL.GetUniformLocation(shader.Id, "uModel");
                 uView = GL.GetUniformLocation(shader.Id, "uView");
                 uProjection = GL.GetUniformLocation(shader.Id, "uProjection");
-                uRayleighCoefficient = GL.GetUniformLocation(shader.Id, "uRayleighCoefficient");
-                uMieCoefficient = GL.GetUniformLocation(shader.Id, "uMieCoefficient");
-                uScatteringDirection = GL.GetUniformLocation(shader.Id, "uScatteringDirection");
-                uCloudSpeed = GL.GetUniformLocation(shader.Id, "uCloudSpeed");
-                uCirrus = GL.GetUniformLocation(shader.Id, "uCirrus");
-                uCumulus = GL.GetUniformLocation(shader.Id, "uCumulus");
-                uSunPosition = GL.GetUniformLocation(shader.Id, "uSunPosition");
+                uProjection = GL.GetUniformLocation(shader.Id, "uProjection");
+                uTexture = GL.GetUniformLocation(shader.Id, "uTexture");
+                uDiffuseColor = GL.GetUniformLocation(shader.Id, "uDiffuseColor");
             }
         }
 
@@ -170,14 +92,16 @@ namespace Gowtu
             shader.SetMat4(uModel, model);
             shader.SetMat4(uView, view);
             shader.SetMat4(uProjection, projection);
+            shader.SetFloat4(uDiffuseColor, diffuseColor);
 
-            shader.SetFloat(uCloudSpeed, cloudSpeed);
-            shader.SetFloat(uCirrus, cirrus);
-            shader.SetFloat(uCumulus, cumulus);
-            shader.SetFloat(uRayleighCoefficient, rayleighCoefficient);
-            shader.SetFloat(uMieCoefficient, mieCoefficient);
-            shader.SetFloat(uScatteringDirection, scatteringDirection);
-            shader.SetFloat3(uSunPosition, sunPosition);
+            int unit = 0;
+
+            if(texture != null)
+            {
+                texture.Bind(unit);
+                shader.SetInt(uTexture, unit);
+                unit++;
+            }
         }
     }
 }

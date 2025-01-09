@@ -226,5 +226,10 @@ void main() {
 
     FragColor = gamma_correction(vec4(lighting, texColor.a));
 }";
+
+        internal static Shader Create()
+        {
+            return new Shader(DiffuseShader.vertexSource, fragmentSource);
+        }
     }
 }

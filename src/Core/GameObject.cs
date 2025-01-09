@@ -29,9 +29,10 @@ namespace Gowtu
     {
         Cube,
         Plane,
+        ProceduralSkybox,
+        Skybox,
         Quad,
         Sphere,
-        Skybox,
         Terrain
     }
 
@@ -248,11 +249,26 @@ namespace Gowtu
                     settings.depthTest = true;
                     break;
                 }
+                case PrimitiveType.ProceduralSkybox:
+                {
+                    g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast, true);
+                    //A cube doesn't work so well with the procedural skybox shader
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshSphere));
+                    var material = new ProceduralSkyboxMaterial();
+                    var renderer = g.AddComponent<MeshRenderer>();
+                    renderer.castShadows = false;
+                    renderer.receiveShadows = false;
+                    renderer.Add(mesh, material);
+                    renderer.renderQueue = 999;
+                    var settings = renderer.GetSettings(0);
+                    settings.cullFace = false;
+                    settings.depthTest = false;
+                    break;
+                }
                 case PrimitiveType.Skybox:
                 {
                     g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast, true);
-                    //A cube doesn't work so well with the skybox shader
-                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshSphere));
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshSkybox));
                     var material = new SkyboxMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.castShadows = false;

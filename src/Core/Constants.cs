@@ -45,12 +45,16 @@ namespace Gowtu
                     return "Depth";
                 case ConstantString.ShaderDiffuse:
                     return "Diffuse";
+                case ConstantString.ShaderProceduralSkybox:
+                    return "ProceduralSkybox";
                 case ConstantString.ShaderSkybox:
                     return "Skybox";
                 case ConstantString.ShaderTerrain:
                     return "Terrain";
                 case ConstantString.TextureDefault:
                     return "Default";
+                case ConstantString.TextureDefaultCubeMap:
+                    return "DefaultCubeMap";
                 case ConstantString.TextureDepth:
                     return "Depth";
                 default:
@@ -80,9 +84,11 @@ namespace Gowtu
         MeshSkybox,
         ShaderDepth,
         ShaderDiffuse,
+        ShaderProceduralSkybox,
         ShaderSkybox,
         ShaderTerrain,
         TextureDefault,
+        TextureDefaultCubeMap,
         TextureDepth
     }
 }

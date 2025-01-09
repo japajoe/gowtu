@@ -361,7 +361,9 @@ namespace Gowtu
     public enum ResourceType
     {
         AudioClip,
-        Texture,
+        Texture2D,
+        Texture2DArray,
+        TextureCubeMap,
         Shader,
         Font,
         Blob

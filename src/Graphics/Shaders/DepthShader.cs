@@ -75,5 +75,10 @@ void main() {
 void main() {
 
 }";
+
+        internal static Shader Create()
+        {
+            return new Shader(vertexSource, fragmentSource, geometrySource);
+        }
     }
 }
