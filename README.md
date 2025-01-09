@@ -4,11 +4,11 @@ A simple library for game development. I initially made it to showcase the capab
 # Features
 - Component based design, very similar to Unity.
 - Create primitive objects easily (including procedural skybox and terrain).
-- UI rendering with Dear ImGui.
 - Directional and point lights.
-- Immediate mode custom 2D shape rendering with your own shaders.
-- Font rendering.
+- Cascaded shadow mapping.
 - Frustum culling.
+- Immediate mode custom 2D shape and text rendering with your own shaders.
+- UI rendering with Dear ImGui.
 - Mouse picking.
 - Advanced audio system with full support for spatialization.
 - Asynchronous asset loading from disk or asset packs.
@@ -47,6 +47,7 @@ namespace GowtuApp
 
     public class Game : GameBehaviour
     {
+        private GameObject camera;
         private GameObject light;
         private GameObject skybox;
         private GameObject plane;
@@ -54,9 +55,7 @@ namespace GowtuApp
 
         private void Start()
         {
-            //At least one camera should exist in order to render objects
-            var camera = new GameObject();
-            camera.AddComponent<Camera>();
+            camera = Camera.mainCamera.gameObject;
             camera.transform.position = new Vector3(0, 1, 4);
             
             //To control camera use WASD (R to go up, F to go down)
@@ -65,10 +64,8 @@ namespace GowtuApp
             firstPersonCamera.speed *= 0.05f;
 
             //This will light things up :)
-            light = new GameObject();
-            light.AddComponent<Light>();
+            light = Light.mainLight.gameObject;
             light.transform.position = new Vector3(100, 200, 100);
-            light.transform.LookAt(transform);
 
             //A procedural skybox
             skybox = GameObject.CreatePrimitive(PrimitiveType.Skybox);

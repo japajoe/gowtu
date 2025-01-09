@@ -63,7 +63,7 @@ namespace Gowtu
         private static List<Renderer> renderers = new List<Renderer>();
         private static PriorityQueue<Renderer, uint> renderQueue = new PriorityQueue<Renderer, uint>();
         private static ImGuiController imgui = null;
-        private static ShadowMap shadowMap = null;
+        private static Shadow shadowMap = null;
         private static DepthMaterial depthMaterial;
 
         internal static void Initialize()
@@ -77,7 +77,7 @@ namespace Gowtu
             light.AddComponent<Light>();
 
             imgui = new ImGuiController();
-            shadowMap = new ShadowMap();
+            shadowMap = new Shadow();
             depthMaterial = new DepthMaterial();
         }
 
@@ -107,7 +107,7 @@ namespace Gowtu
             var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, Light.UBO_NAME);
             var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, Camera.UBO_NAME);
             var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, World.UBO_NAME);
-            var uboShadow = CreateUniformBuffer<UniformShadowInfo>(ShadowMap.UBO_BINDING_INDEX, 1, ShadowMap.UBO_NAME);
+            var uboShadow = CreateUniformBuffer<UniformShadowInfo>(Shadow.UBO_BINDING_INDEX, 1, Shadow.UBO_NAME);
 
             uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
             uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
@@ -119,9 +119,9 @@ namespace Gowtu
             uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
             uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
 
-            uboShadow.BindBlockToShader(diffuseShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
-            uboShadow.BindBlockToShader(terrainShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
-            uboShadow.BindBlockToShader(depthShader, ShadowMap.UBO_BINDING_INDEX, ShadowMap.UBO_NAME);
+            uboShadow.BindBlockToShader(diffuseShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            uboShadow.BindBlockToShader(terrainShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            uboShadow.BindBlockToShader(depthShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
         }
 
         private static UniformBufferObject CreateUniformBuffer<T>(uint bindingIndex, uint numItems, string name) where T : unmanaged

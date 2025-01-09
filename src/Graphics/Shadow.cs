@@ -29,7 +29,7 @@ using OpenTK.Mathematics;
 
 namespace Gowtu
 {
-    public sealed class ShadowMap
+    public sealed class Shadow
     {
         public static readonly uint UBO_BINDING_INDEX = 3;
         public static readonly string UBO_NAME = "Shadow";
@@ -54,7 +54,7 @@ namespace Gowtu
             }
         }
 
-        public ShadowMap()
+        public Shadow()
         {
             m_depthMap = Resources.FindTexture<Texture2DArray>("Depth");
             m_shader = Resources.FindShader("Depth");
