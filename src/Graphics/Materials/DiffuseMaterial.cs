@@ -133,9 +133,9 @@ namespace Gowtu
 
         public DiffuseMaterial() : base()
         {
-            shader = Resources.FindShader("Diffuse");
-            diffuseTexture = Resources.FindTexture<Texture2D>("Default");
-            depthMap = Resources.FindTexture<Texture2DArray>("Depth");
+            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderDiffuse));
+            diffuseTexture = Resources.FindTexture<Texture2D>(Constants.GetString(ConstantString.TextureDefault));
+            depthMap = Resources.FindTexture<Texture2DArray>(Constants.GetString(ConstantString.TextureDepth));
             diffuseColor = Color.White;
             ambientStrength = 0.5f;
             shininess = 16.0f;

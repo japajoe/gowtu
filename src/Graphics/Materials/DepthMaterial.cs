@@ -31,7 +31,7 @@ namespace Gowtu
 
         public DepthMaterial() : base()
         {
-            shader = Resources.FindShader("Depth");
+            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderDepth));
 
             if(shader != null)
             {

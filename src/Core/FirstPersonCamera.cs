@@ -86,35 +86,27 @@ namespace Gowtu
             if(!IsControllable)
                 return;
 
-            if (Math.Abs(inputVertical) > float.Epsilon)
+            Vector3 direction = inputVertical * transform.forward +
+                                inputHorizontal * transform.right + 
+                                inputPanning * Vector3.UnitY;
+
+            if(direction.Length > 0)
             {
-                Move(transform.forward, inputVertical * speed * Time.DeltaTime);
+                direction.Normalize();
+                Move(direction * speed * Time.DeltaTime);
             }
 
-            if (Math.Abs(inputHorizontal) > float.Epsilon)
-            {
-                Move(transform.right, inputHorizontal * speed * Time.DeltaTime);
-            }
 
-            if (Math.Abs(Input.GetScrollDirection().Y) > float.Epsilon)
-            {
-                Move(transform.forward, inputZoom * zoomSpeed * Time.DeltaTime);
-            }
-
-            if (Math.Abs(inputPanning) > float.Epsilon)
-            {
-                Move(Vector3.UnitY, inputPanning * speed * Time.DeltaTime);
-            }
+            if (Math.Abs(inputZoom) > float.Epsilon)
+                Move(transform.forward * inputZoom * zoomSpeed * Time.DeltaTime);
 
             if (mouseIsDown)
-            {
                 Rotate();
-            }
         }
 
-        void Move(Vector3 direction, float movementSpeed)
+        void Move(Vector3 direction)
         {
-            transform.position += direction * movementSpeed;
+            transform.position += direction;
         }
 
         void Rotate()

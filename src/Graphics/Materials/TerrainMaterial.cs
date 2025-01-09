@@ -218,14 +218,16 @@ namespace Gowtu
 
         public TerrainMaterial() : base()
         {
-            var defaultTexture = Resources.FindTexture<Texture2D>("Default");
+            var defaultTexture = Resources.FindTexture<Texture2D>(Constants.GetString(ConstantString.TextureDefault));
             
             splatMap = defaultTexture;
             texture1 = defaultTexture;
             texture2 = defaultTexture;
             texture3 = defaultTexture;
             texture4 = defaultTexture;
-            depthMap = Resources.FindTexture<Texture2DArray>("Depth");
+            
+            depthMap = Resources.FindTexture<Texture2DArray>(Constants.GetString(ConstantString.TextureDepth));
+            
             diffuseColor = Color.White;
             ambientStrength = 0.5f;
             shininess = 16.0f;
@@ -235,7 +237,7 @@ namespace Gowtu
             uvScale4 = new Vector2(1, 1);
             receiveShadows = true;
 
-            shader = Resources.FindShader("Terrain");
+            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderTerrain));
 
             if(shader != null)
             {

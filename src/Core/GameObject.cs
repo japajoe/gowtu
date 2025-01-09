@@ -206,7 +206,7 @@ namespace Gowtu
             {
                 case PrimitiveType.Cube:
                 {
-                    var mesh = Resources.FindMesh("Cube");
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshCube));
                     var material = new DiffuseMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.Add(mesh, material);
@@ -217,7 +217,7 @@ namespace Gowtu
                 }
                 case PrimitiveType.Plane:
                 {
-                    var mesh = Resources.FindMesh("Plane");                    
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshPlane));                    
                     var material = new DiffuseMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.Add(mesh, material);
@@ -228,7 +228,7 @@ namespace Gowtu
                 }
                 case PrimitiveType.Quad:
                 {
-                    var mesh = Resources.FindMesh("Quad");
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshQuad));
                     var material = new DiffuseMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.Add(mesh, material);
@@ -239,7 +239,7 @@ namespace Gowtu
                 }
                 case PrimitiveType.Sphere:
                 {
-                    var mesh = Resources.FindMesh("Sphere");
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshSphere));
                     var material = new DiffuseMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.Add(mesh, material);
@@ -251,7 +251,8 @@ namespace Gowtu
                 case PrimitiveType.Skybox:
                 {
                     g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast, true);
-                    var mesh = Resources.FindMesh("Sphere");
+                    //A cube doesn't work so well with the skybox shader
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshSphere));
                     var material = new SkyboxMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.castShadows = false;

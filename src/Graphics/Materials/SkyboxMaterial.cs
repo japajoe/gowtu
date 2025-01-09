@@ -132,7 +132,7 @@ namespace Gowtu
         
         public SkyboxMaterial() : base()
         {
-            shader = Resources.FindShader("Skybox");
+            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderSkybox));
             cloudSpeed = 0.1f;
             cirrus = 0.677f;
             cumulus = 0.403f;

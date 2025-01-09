@@ -88,21 +88,19 @@ namespace Gowtu
 
         private static void CreateResources()
         {
-            Resources.AddTexture("Default", new Texture2D(2, 2, Color.White));
-            var depthmap = Resources.AddTexture("Depth", new Texture2DArray(2048, 2048, 5));
-
-            GL.ObjectLabel(ObjectIdentifier.Texture, (uint)depthmap.Id, -1, "DepthTexture");
+            Resources.AddTexture(Constants.GetString(ConstantString.TextureDefault), new Texture2D(2, 2, Color.White));
+            var depthmap = Resources.AddTexture(Constants.GetString(ConstantString.TextureDepth), new Texture2DArray(2048, 2048, 5));
             
-            var diffuseShader = Resources.AddShader("Diffuse", new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
-            var skyboxShader = Resources.AddShader("Skybox", new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
-            var terrainShader = Resources.AddShader("Terrain", new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
-            var depthShader = Resources.AddShader("Depth", new Shader(DepthShader.vertexSource, DepthShader.fragmentSource, DepthShader.geometrySource));
+            var diffuseShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDiffuse), new Shader(DiffuseShader.vertexSource, DiffuseShader.fragmentSource));
+            var skyboxShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderSkybox), new Shader(SkyboxShader.vertexSource, SkyboxShader.fragmentSource));
+            var terrainShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderTerrain), new Shader(DiffuseShader.vertexSource, TerrainShader.fragmentSource));
+            var depthShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDepth), new Shader(DepthShader.vertexSource, DepthShader.fragmentSource, DepthShader.geometrySource));
 
-            Resources.AddMesh("Cube", MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
-            Resources.AddMesh("Plane", MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
-            Resources.AddMesh("Quad", MeshGenerator.CreateQuad(new Vector3(1, 1, 1)));
-            Resources.AddMesh("Sphere", MeshGenerator.CreateSphere(new Vector3(1, 1, 1)));
-            Resources.AddMesh("Skybox", MeshGenerator.CreateSkybox(new Vector3(1, 1, 1)));
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshCube), MeshGenerator.CreateCube(new Vector3(1, 1, 1)));
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshPlane), MeshGenerator.CreatePlane(new Vector3(1, 1, 1)));
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshQuad), MeshGenerator.CreateQuad(new Vector3(1, 1, 1)));
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshSphere), MeshGenerator.CreateSphere(new Vector3(1, 1, 1)));
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshSkybox), MeshGenerator.CreateSkybox(new Vector3(1, 1, 1)));
 
             var uboLights = CreateUniformBuffer<UniformLightInfo>(Light.UBO_BINDING_INDEX, Light.MAX_LIGHTS, Light.UBO_NAME);
             var uboCamera = CreateUniformBuffer<UniformCameraInfo>(Camera.UBO_BINDING_INDEX, 1, Camera.UBO_NAME);
