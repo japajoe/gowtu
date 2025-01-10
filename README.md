@@ -1,5 +1,5 @@
 # Gowtu
-A simple library for game development. I initially made it to showcase the capabilities of [my audio library](https://github.com/japajoe/MiniAudioExNET), although the demo is not ready yet.
+A simple library for game development. I initially made it to [showcase](https://github.com/japajoe/gowtu/tree/main/test) the capabilities of [my audio library](https://github.com/japajoe/MiniAudioExNET), but things got a bit out of control.
 
 # Features
 - Component based design, very similar to Unity.
