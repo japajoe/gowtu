@@ -1,4 +1,11 @@
 /.vscode
 /bin
 /obj
-/test
+/test/bin
+/test/obj
+/test/Resources
+/test/audiosettings.dat
+/test/imgui.ini
+/test/imgui.ini
+/test/src/Test.cs
+/test/src/TestProgram.cs
