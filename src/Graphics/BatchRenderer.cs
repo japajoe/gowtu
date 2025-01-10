@@ -37,7 +37,6 @@ namespace Gowtu
         private uint m_instanceCount;
         private uint m_maxInstances;
         private List<BatchRendererInstanceData> m_instanceData;
-        private bool m_dirty;
 
         public uint InstanceCount
         {
@@ -65,34 +64,44 @@ namespace Gowtu
         {
             m_settings = new RenderSettings();
             m_instanceCount = 0;
-            m_maxInstances = ushort.MaxValue;
+            m_maxInstances = 1048576; // 2 ^ 20
             m_instanceVBO = new VertexBufferObject();
             m_instanceData = new List<BatchRendererInstanceData>(new BatchRendererInstanceData[m_maxInstances]);
         }
 
-        public void SetInstanceData(uint index, Vector3 translation, Quaternion rotation, Vector3 scale, Color color)
+        public void SetInstanceData(int index, Vector3 translation, Quaternion rotation, Vector3 scale, Color color)
         {
-            if(index >= m_instanceCount)
+            if(m_instanceVBO.Id == 0)
                 return;
+
+            if(index < 0 || index >= m_instanceCount)
+                return;
+
             Matrix4 t = Matrix4.CreateTranslation(translation);
             Matrix4 r = Matrix4.CreateFromQuaternion(rotation);
             Matrix4 s = Matrix4.CreateScale(scale);
-            Matrix4 transformation = s * r * t;
 
-            var data = m_instanceData[(int)index];
-            data.matrix = transformation;
+            var data = m_instanceData[index];
+            data.matrix = s * r * t;
             data.color = color;
-            m_instanceData[(int)index] = data;
+            m_instanceData[index] = data;
 
-            m_dirty = true;
+            var slice = CollectionsMarshal.AsSpan(m_instanceData).Slice(index, 1);
+
+            m_instanceVBO.Bind();
+            m_instanceVBO.BufferSubData<BatchRendererInstanceData>(slice, index * Marshal.SizeOf<BatchRendererInstanceData>());
+            m_instanceVBO.Unbind();
         }
 
-        public BatchRendererInstanceData GetInstanceData(uint index)
+        public BatchRendererInstanceData GetInstanceData(int index)
         {
-            if(index >= m_maxInstances)
+            if(m_instanceVBO.Id == 0)
+                return default(BatchRendererInstanceData);
+
+            if(index < 0 || index >= m_instanceCount)
                 return default(BatchRendererInstanceData);
             
-            return m_instanceData[(int)index];
+            return m_instanceData[index];
         }
 
         public void SetMesh(Mesh mesh)
@@ -130,9 +139,7 @@ namespace Gowtu
                 
                 m_mesh.VAO.Unbind();
                 
-                //m_instanceVBO.Unbind();
-
-                GL.ObjectLabel(ObjectIdentifier.Buffer, (uint)m_instanceVBO.Id, -1, "InstanceVBO");
+                m_instanceVBO.Unbind();
             }
         }
 
@@ -145,27 +152,18 @@ namespace Gowtu
             return m_mesh;
         }
 
-        public void SetMaterial(Material material, int index)
+        public void SetMaterial(Material material)
         {
-            if (index != 0)
-                return;
-
             this.m_material = material;
         }
 
-        public T GetMaterial<T>(int index) where T : Material
+        public T GetMaterial<T>() where T : Material
         {
-            if (index != 0)
-                return null;
-
             return m_material as T;
         }
 
-        public RenderSettings GetSettings(int index)
+        public RenderSettings GetSettings()
         {
-            if (index != 0)
-                return null;
-
             return m_settings;
         }
 
@@ -193,8 +191,6 @@ namespace Gowtu
 
             if (m_material.Shader == null)
                 return;
-
-            UploadData();
 
             GLState.DepthTest(m_settings.depthTest);
             GLState.CullFace(m_settings.cullFace);
@@ -238,8 +234,6 @@ namespace Gowtu
             if (material.Shader == null)
                 return;
 
-            UploadData();
-
             GLState.DepthTest(m_settings.depthTest);
             GLState.CullFace(m_settings.cullFace);
             GLState.BlendMode(m_settings.alphaBlend);
@@ -255,20 +249,6 @@ namespace Gowtu
                 GL.DrawArraysInstanced(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, 0, m_mesh.VertexCount, (int)m_instanceCount);
 
             m_mesh.VAO.Unbind();
-        }
-
-        private void UploadData()
-        {
-            if(!m_dirty)
-                return;
-
-            var slice = CollectionsMarshal.AsSpan(m_instanceData).Slice(0, (int)m_instanceCount);
-
-            m_instanceVBO.Bind();
-            m_instanceVBO.BufferSubData<BatchRendererInstanceData>(slice, 0);
-            m_instanceVBO.Unbind();
-
-            m_dirty = false;
         }
     }
 

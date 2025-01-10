@@ -97,7 +97,7 @@ namespace Gowtu
             var skyboxShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderSkybox), SkyboxShader.Create());
             var terrainShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderTerrain), TerrainShader.Create());
             var depthShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDepth), DepthShader.Create());
-            var particleShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderParticle), ParticleShader.Create());
+            var diffuseInstancedShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDiffuseInstanced), DiffuseInstancedShader.Create());
 
             Resources.AddMesh(Constants.GetString(ConstantString.MeshCube), MeshGenerator.CreateCube(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshPlane), MeshGenerator.CreatePlane(Vector3.One));
@@ -110,24 +110,44 @@ namespace Gowtu
             var uboWorld = CreateUniformBuffer<UniformWorldInfo>(World.UBO_BINDING_INDEX, 1, World.UBO_NAME);
             var uboShadow = CreateUniformBuffer<UniformShadowInfo>(Shadow.UBO_BINDING_INDEX, 1, Shadow.UBO_NAME);
 
-            uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-            uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-            uboLights.BindBlockToShader(particleShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            BindShaderToUniformBuffers(diffuseShader);
+            BindShaderToUniformBuffers(proceduralSkyboxShader);
+            BindShaderToUniformBuffers(skyboxShader);
+            BindShaderToUniformBuffers(terrainShader);
+            BindShaderToUniformBuffers(depthShader);
+            BindShaderToUniformBuffers(diffuseInstancedShader);
 
-            uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-            uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-            uboCamera.BindBlockToShader(particleShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            // uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            // uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            // uboLights.BindBlockToShader(diffuseInstancedShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
 
-            uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(proceduralSkyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            uboWorld.BindBlockToShader(particleShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            // uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            // uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            // uboCamera.BindBlockToShader(diffuseInstancedShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
 
-            uboShadow.BindBlockToShader(diffuseShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            uboShadow.BindBlockToShader(terrainShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            uboShadow.BindBlockToShader(depthShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            uboShadow.BindBlockToShader(particleShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            // uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            // uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            // uboWorld.BindBlockToShader(proceduralSkyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            // uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            // uboWorld.BindBlockToShader(diffuseInstancedShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+
+            // uboShadow.BindBlockToShader(diffuseShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            // uboShadow.BindBlockToShader(terrainShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            // uboShadow.BindBlockToShader(depthShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+            // uboShadow.BindBlockToShader(diffuseInstancedShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
+        }
+
+        private static void BindShaderToUniformBuffers(Shader shader)
+        {
+            var uboLights = Resources.FindUniformBuffer(Light.UBO_NAME);
+            var uboCamera = Resources.FindUniformBuffer(Camera.UBO_NAME);
+            var uboWorld = Resources.FindUniformBuffer(Camera.UBO_NAME);
+            var uboShadow = Resources.FindUniformBuffer(Shadow.UBO_NAME);
+
+            uboLights.BindBlockToShader(shader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
+            uboCamera.BindBlockToShader(shader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
+            uboWorld.BindBlockToShader(shader, World.UBO_BINDING_INDEX, World.UBO_NAME);
+            uboShadow.BindBlockToShader(shader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
         }
 
         private static UniformBufferObject CreateUniformBuffer<T>(uint bindingIndex, uint numItems, string name) where T : unmanaged

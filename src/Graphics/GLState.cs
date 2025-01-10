@@ -121,7 +121,7 @@ namespace Gowtu
 
         private static void EnableBlendMode()
         {
-            if(!lastBlendMode)
+            //if(!lastBlendMode)
             {
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -131,7 +131,7 @@ namespace Gowtu
 
         private static void DisableBlendMode()
         {
-            if(lastBlendMode)
+            //if(lastBlendMode)
             {
                 GL.Disable(EnableCap.Blend);
                 lastBlendMode = true;

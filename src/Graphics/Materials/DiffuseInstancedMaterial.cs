@@ -25,7 +25,7 @@ using OpenTK.Mathematics;
 
 namespace Gowtu
 {
-    public class ParticleMaterial : Material
+    public class DiffuseInstancedMaterial : Material
     {
         private int uDiffuseTexture;
         private int uDepthMap;
@@ -128,9 +128,9 @@ namespace Gowtu
             }
         }
 
-        public ParticleMaterial() : base()
+        public DiffuseInstancedMaterial() : base()
         {
-            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderParticle));
+            shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderDiffuseInstanced));
             diffuseTexture = Resources.FindTexture<Texture2D>(Constants.GetString(ConstantString.TextureDefault));
             depthMap = Resources.FindTexture<Texture2DArray>(Constants.GetString(ConstantString.TextureDepth));
             diffuseColor = Color.White;

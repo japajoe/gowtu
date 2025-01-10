@@ -22,7 +22,7 @@
 
 namespace Gowtu
 {
-    public static class ParticleShader
+    public static class DiffuseInstancedShader
     {
         public static readonly string vertexSource = @"#version 330 core
 
