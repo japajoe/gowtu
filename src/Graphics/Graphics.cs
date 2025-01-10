@@ -117,6 +117,15 @@ namespace Gowtu
             BindShaderToUniformBuffers(depthShader);
             BindShaderToUniformBuffers(diffuseInstancedShader);
 
+            Font font = new Font();
+            if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 32))
+            {
+                if(font.GenerateTexture())
+                {
+                    Resources.AddFont(Constants.GetString(ConstantString.FontDefault), font);
+                }
+            }
+
             // uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
             // uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
             // uboLights.BindBlockToShader(diffuseInstancedShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);

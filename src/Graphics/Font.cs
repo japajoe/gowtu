@@ -221,7 +221,7 @@ namespace Gowtu
 
         public float GetPixelScale(float fontSize)
         {
-            return fontSize / m_pixelSize;
+            return fontSize / (float)m_pixelSize;
         }
 
         public void CalculateBounds(string text, Int32 size, float fontSize, out float width, out float height) 
@@ -344,6 +344,12 @@ namespace Gowtu
             return yOffset;
         }
 
+        private int FT_LOAD_TARGET_(Int32 v)
+        {
+            Int32 result = (Int32)((v) & 15) << 16;
+            return result;
+        }
+
         private bool Load(FT_FaceRec_ *fontFace) 
         {
             FT_Set_Pixel_Sizes(fontFace, 0, m_pixelSize);
@@ -358,6 +364,7 @@ namespace Gowtu
             Int32 LOAD_RENDER = (int)FT_LOAD_RENDER;
             Int32 RENDER_MODE_SDF = (int)FT_RENDER_MODE_SDF;
             Int32 flags = LOAD_RENDER | RENDER_MODE_SDF;
+            ////Int32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
             FT_LOAD loadFlags = (FT_LOAD)flags;
 
             m_textureData = new List<byte>(new byte[textureWidth * textureHeight]);

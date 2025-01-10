@@ -306,21 +306,20 @@ namespace Gowtu
                 for(int i = 0; i < resources.Count; i++)
                 {
                     Resource asset = new Resource();
-                    asset.info = new ResourceInfo();
-                    asset.info.filePath = resources[i].filePath;
-                    asset.info.type = resources[i].type;
+                    asset.filePath = resources[i].filePath;
+                    asset.type = resources[i].type;
 
                     if(!System.IO.File.Exists(resources[i].filePath))
                     {
                         await Task.Delay(1);
                         asset.data = null;
-                        asset.info.result = ResourceLoadResult.Error;
+                        asset.result = ResourceLoadResult.Error;
                         resourceQueue.Enqueue(asset);
                     }
                     else
                     {
                         asset.data = await System.IO.File.ReadAllBytesAsync(resources[i].filePath);
-                        asset.info.result = ResourceLoadResult.Ok;
+                        asset.result = ResourceLoadResult.Ok;
                         resourceQueue.Enqueue(asset);
                     }
                 }
@@ -344,26 +343,56 @@ namespace Gowtu
                         for(int i = 0; i < resources.Count; i++)
                         {
                             Resource asset = new Resource();
-                            asset.info = new ResourceInfo();
-                            asset.info.filePath = resources[i].filePath;
-                            asset.info.type = resources[i].type;
+                            asset.filePath = resources[i].filePath;
+                            asset.type = resources[i].type;
 
                             if(!pack.FileExists(resources[i].filePath))
                             {
                                 await Task.Delay(1);
                                 asset.data = null;
-                                asset.info.result = ResourceLoadResult.Error;
+                                asset.result = ResourceLoadResult.Error;
                                 resourceQueue.Enqueue(asset);
                             }
                             else
                             {
                                 asset.data = await pack.GetFileBufferAsync(resources[i].filePath);
-                                asset.info.result = ResourceLoadResult.Ok;
+                                asset.result = ResourceLoadResult.Ok;
                                 resourceQueue.Enqueue(asset);
                             }
                         }
                     }
                 }                
+            });            
+        }
+
+        public static void LoadAsyncBatchFromFile(ResourceType type, List<string> resources)
+        {
+            Task.Run(async () =>
+            {
+                ResourceBatch batch = new ResourceBatch(type);
+
+                for(int i = 0; i < resources.Count; i++)
+                {
+                    Resource asset = new Resource();
+                    asset.filePath = resources[i];
+                    asset.type = type;
+
+                    if(!System.IO.File.Exists(resources[i]))
+                    {
+                        await Task.Delay(1);
+                        asset.data = null;
+                        asset.result = ResourceLoadResult.Error;
+                        batch.resources.Add(asset);
+                    }
+                    else
+                    {
+                        asset.data = await System.IO.File.ReadAllBytesAsync(resources[i]);
+                        asset.result = ResourceLoadResult.Ok;
+                        batch.resources.Add(asset);
+                    }
+                }
+
+                resourceBatchQueue.Enqueue(batch);
             });            
         }
 
@@ -386,28 +415,27 @@ namespace Gowtu
                         for(int i = 0; i < resources.Count; i++)
                         {
                             Resource asset = new Resource();
-                            asset.info = new ResourceInfo();
-                            asset.info.filePath = resources[i];
-                            asset.info.type = type;
+                            asset.filePath = resources[i];
+                            asset.type = type;
 
                             if(!pack.FileExists(resources[i]))
                             {
                                 await Task.Delay(1);
                                 asset.data = null;
-                                asset.info.result = ResourceLoadResult.Error;
+                                asset.result = ResourceLoadResult.Error;
                                 batch.resources.Add(asset);
                             }
                             else
                             {
                                 asset.data = await pack.GetFileBufferAsync(resources[i]);
-                                asset.info.result = ResourceLoadResult.Ok;
+                                asset.result = ResourceLoadResult.Ok;
                                 batch.resources.Add(asset);
                             }
                         }
 
                         resourceBatchQueue.Enqueue(batch);
                     }
-                }                
+                }
             });            
         }
     }
@@ -432,7 +460,6 @@ namespace Gowtu
     public class ResourceInfo
     {
         public ResourceType type;
-        public ResourceLoadResult result;
         public string filePath;
 
         public ResourceInfo()
@@ -450,7 +477,9 @@ namespace Gowtu
 
     public class Resource
     {
-        public ResourceInfo info;
+        public ResourceType type;
+        public ResourceLoadResult result;
+        public string filePath;
         public byte[] data;
     }
 

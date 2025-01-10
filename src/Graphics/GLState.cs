@@ -26,29 +26,14 @@ namespace Gowtu
 {
     public static class GLState
     {
-        private static DepthFunction lastDepthFunc = DepthFunction.Less;
-        private static bool lastDepthTest = true;
-        private static bool lastCullFace = true;
-        private static PolygonMode lastPolygonMode = PolygonMode.Fill;
-        private static bool lastBlendMode = false;
-        private static bool lastDepthMask = true;
-
         public static void SetDepthFunc(DepthFunction func)
         {
-            if (func != lastDepthFunc)
-            {
-                GL.DepthFunc(func);
-                lastDepthFunc = func;
-            }
+            GL.DepthFunc(func);
         }
 
         public static void SetPolygonMode(PolygonMode mode)
         {
-            if (mode != lastPolygonMode)
-            {
-                GL.PolygonMode(TriangleFace.FrontAndBack, mode);
-                lastPolygonMode = mode;
-            }
+            GL.PolygonMode(TriangleFace.FrontAndBack, mode);
         }
 
         public static void DepthTest(bool enabled)
@@ -85,75 +70,43 @@ namespace Gowtu
 
         private static void EnableDepthTest()
         {
-            if (!lastDepthTest)
-            {
-                GL.Enable(EnableCap.DepthTest);
-                lastDepthTest = true;
-            }
+            GL.Enable(EnableCap.DepthTest);
         }
 
         private static void DisableDepthTest()
         {
-            if (lastDepthTest)
-            {
-                GL.Disable(EnableCap.DepthTest);
-                lastDepthTest = false;
-            }
+            GL.Disable(EnableCap.DepthTest);
         }
 
         private static void EnableCullFace()
         {
-            if (!lastCullFace)
-            {
-                GL.Enable(EnableCap.CullFace);
-                lastCullFace = true;
-            }
+            GL.Enable(EnableCap.CullFace);
         }
 
         private static void DisableCullFace()
         {
-            if (lastCullFace)
-            {
-                GL.Disable(EnableCap.CullFace);
-                lastCullFace = false;
-            }
+            GL.Disable(EnableCap.CullFace);
         }
 
         private static void EnableBlendMode()
         {
-            //if(!lastBlendMode)
-            {
-                GL.Enable(EnableCap.Blend);
-                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-                lastBlendMode = true;
-            }
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         }
 
         private static void DisableBlendMode()
         {
-            //if(lastBlendMode)
-            {
-                GL.Disable(EnableCap.Blend);
-                lastBlendMode = true;
-            }
+            GL.Disable(EnableCap.Blend);
         }
 
         private static void EnableDepthMask()
         {
-            if (!lastDepthMask)
-            {
-                GL.DepthMask(true);
-                lastDepthMask = true;
-            }
+            GL.DepthMask(true);
         }
 
         private static void DisableDepthMask()
         {
-            if (lastDepthMask)
-            {
-                GL.DepthMask(false);
-                lastDepthMask = false;
-            }
+            GL.DepthMask(false);
         }
     }
 }

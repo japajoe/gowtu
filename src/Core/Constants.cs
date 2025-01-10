@@ -23,6 +23,8 @@ namespace Gowtu
         {
             switch(n)
             {
+                case ConstantString.FontDefault:
+                    return "Default";
                 case ConstantString.UniformBufferCamera:
                     return Camera.UBO_NAME;
                 case ConstantString.UniformBufferLights:
@@ -75,10 +77,7 @@ namespace Gowtu
 
     public enum ConstantString
     {
-        UniformBufferCamera,
-        UniformBufferLights,
-        UniformBufferShadow,
-        UniformBufferWorld,
+        FontDefault,
         MeshCube,
         MeshPlane,
         MeshQuad,
@@ -92,6 +91,10 @@ namespace Gowtu
         ShaderTerrain,
         TextureDefault,
         TextureDefaultCubeMap,
-        TextureDepth
+        TextureDepth,
+        UniformBufferCamera,
+        UniformBufferLights,
+        UniformBufferShadow,
+        UniformBufferWorld
     }
 }
