@@ -194,7 +194,13 @@ namespace Gowtu
                 {
                     Renderer renderer = renderQueue.Dequeue();
                     if(renderer.castShadows)
+                    {
+                        if(renderer is BatchRenderer)
+                            depthMaterial.HasInstanceData = true;
+                        else
+                            depthMaterial.HasInstanceData = false;
                         renderer.OnRender(depthMaterial);
+                    }
                 }
 
                 shadowMap.Unbind();

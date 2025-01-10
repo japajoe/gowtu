@@ -28,14 +28,32 @@ namespace Gowtu
     public class DepthMaterial : Material
     {
         private int uModel;
+        private int uHasInstanceData;
+
+        private bool hasInstanceData;
+
+        public bool HasInstanceData
+        {
+            get
+            {
+                return hasInstanceData;
+            }
+            set
+            {
+                hasInstanceData = value;
+            }
+        }
 
         public DepthMaterial() : base()
         {
             shader = Resources.FindShader(Constants.GetString(ConstantString.ShaderDepth));
+            
+            hasInstanceData = false;
 
             if(shader != null)
             {
                 uModel = GL.GetUniformLocation(shader.Id, "uModel");
+                uHasInstanceData = GL.GetUniformLocation(shader.Id, "uHasInstanceData");
             }
         }
 
@@ -49,6 +67,7 @@ namespace Gowtu
             shader.Use();
 
             shader.SetMat4(uModel, model);
+            shader.SetInt(uHasInstanceData, hasInstanceData ? 1 : 0);
         }
     }
 }

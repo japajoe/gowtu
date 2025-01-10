@@ -26,11 +26,16 @@ namespace Gowtu
     {
         public static readonly string vertexSource = @"#version 330 core
 layout (location = 0) in vec3 aPosition;
+layout (location = 3) in mat4 aInstanceModel;
 
 uniform mat4 uModel;
+uniform int uHasInstanceData;
 
 void main() {
-    gl_Position = uModel * vec4(aPosition, 1.0);
+    if(uHasInstanceData > 0)
+        gl_Position = aInstanceModel * vec4(aPosition, 1.0);
+    else
+        gl_Position = uModel * vec4(aPosition, 1.0);
 }";
 
         public static readonly string geometrySource = @"#version 420 core
