@@ -157,8 +157,7 @@ namespace Gowtu
                     {
                         float *pFloat = (float*)pData;
                         *pFloat = shadowCascadeLevels[i];
-                    }
-                    
+                    }                    
                 }
             }
 

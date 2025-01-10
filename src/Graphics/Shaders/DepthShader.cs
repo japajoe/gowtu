@@ -35,14 +35,9 @@ void main() {
 
         public static readonly string geometrySource = @"#version 420 core
 layout(triangles, invocations = 5) in;
-//layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-//Test to see if this works on 330 core
-#define INVOCATIONS 5
-
-layout (std140) uniform Shadow
-{
+layout (std140) uniform Shadow {
     int cascadeCount;
     float shadowBias;
     float farPlane;
@@ -50,17 +45,6 @@ layout (std140) uniform Shadow
     mat4 lightSpaceMatrices[16];
     float cascadePlaneDistances[16];
 } uShadow;
-
-// void main() {          
-// 	for(int id = 0; id < INVOCATIONS; id++) {
-// 		for (int i = 0; i < 3; i++) {
-// 			gl_Position = uShadow.lightSpaceMatrices[id] * gl_in[i].gl_Position;
-// 			gl_Layer = id;
-// 			EmitVertex();
-// 		}
-// 		EndPrimitive();
-// 	}
-// }
 
 void main() {          
 	for (int i = 0; i < 3; ++i) {

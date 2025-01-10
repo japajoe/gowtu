@@ -237,5 +237,75 @@ namespace Gowtu
                 mesh.Generate();
             }
         }
+
+        public float GetHeightAtPoint(int x, int y)
+        {
+            int width = (int)resolution.X;
+            int vertsPerRow = width + 1;
+            int index = (y * vertsPerRow) + x;
+
+            if(index >= mesh.Vertices.Length)
+                return 0.0f;
+
+            return mesh.Vertices[index].position.Y;
+        }
+
+        public bool GetVertexAtPoint(int x, int y, out Vector3 position)
+        {
+            int width = (int)resolution.X;
+            int vertsPerRow = width + 1;
+            int index = (y * vertsPerRow) + x;
+
+            position = Vector3.Zero;
+
+            if(index >= mesh.Vertices.Length)
+                return false;
+
+            position = mesh.Vertices[index].position;
+            return true;
+        }
+
+        public bool WorldToTerrainPoint(Vector3 worldPoint, out Vector2 terrainPoint)
+        {
+            float offsetX = worldPoint.X - transform.position.X;
+            float offsetZ = worldPoint.Z - transform.position.Z;
+
+            offsetZ *= -1.0f; //Flip direction because -z is forward
+
+            int width = (int)resolution.X;
+            int depth = (int)resolution.Y;
+
+            float terrainMinX = 0.0f;
+            float terrainMaxX = width * scale.X;
+
+            float terrainMinZ = 0.0f;
+            float terrainMaxZ = depth * scale.Z;
+
+            int tileX = FloorToInt(InverseLerp(terrainMinX, terrainMaxX, offsetX) * width);
+            int tileZ = FloorToInt(InverseLerp(terrainMinZ, terrainMaxZ, offsetZ) * depth);
+
+            terrainPoint = Vector2.Zero;
+
+            if(tileX >= width || tileZ >= depth)
+                return false;
+            if(tileX < 0 || tileZ < 0)
+                return false;
+            
+            terrainPoint.X = tileX;
+            terrainPoint.Y = tileZ;
+            return true;
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private float InverseLerp(float start, float end, float value)
+        {
+            return (value - start) / (end - start);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private int FloorToInt(float x)
+        {
+            return (int)Math.Floor(x);
+        }
     }
 }

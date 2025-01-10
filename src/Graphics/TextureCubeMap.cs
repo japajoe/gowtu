@@ -66,6 +66,11 @@ namespace Gowtu
             GL.BindTexture(TextureTarget.TextureCubeMap, 0);
         }
 
+        /// <summary>
+        /// Creates a cubemap from given images.
+        /// </summary>
+        /// <param name="images">A collection of 6 images. Order: right, left, bottom, top, front, back</param>
+        /// <returns></returns>
         public TextureCubeMap(ReadOnlySpan<Image> images) : base()
         {
             if(images.Length != 6)

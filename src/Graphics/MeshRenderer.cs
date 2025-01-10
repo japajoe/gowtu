@@ -221,5 +221,5 @@ namespace Gowtu
             this.material = material;
             settings = new RenderSettings();
         }
-    };
+    }
 }

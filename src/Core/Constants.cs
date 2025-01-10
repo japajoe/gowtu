@@ -45,6 +45,8 @@ namespace Gowtu
                     return "Depth";
                 case ConstantString.ShaderDiffuse:
                     return "Diffuse";
+                case ConstantString.ShaderParticle:
+                    return "Particle";
                 case ConstantString.ShaderProceduralSkybox:
                     return "ProceduralSkybox";
                 case ConstantString.ShaderSkybox:
@@ -84,6 +86,7 @@ namespace Gowtu
         MeshSkybox,
         ShaderDepth,
         ShaderDiffuse,
+        ShaderParticle,
         ShaderProceduralSkybox,
         ShaderSkybox,
         ShaderTerrain,
