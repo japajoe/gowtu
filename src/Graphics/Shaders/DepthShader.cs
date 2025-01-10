@@ -62,7 +62,6 @@ void main() {
 
         public static readonly string fragmentSource = @"#version 330 core
 void main() {
-
 }";
 
         internal static Shader Create()
