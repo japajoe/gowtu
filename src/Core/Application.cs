@@ -157,9 +157,9 @@ namespace Gowtu
 
             nativeWindow = window;
 
-            GLFW.SwapInterval(config.flags.HasFlag(WindowFlags.VSync) ? 1 : 0);
-
             GLFW.MakeContextCurrent(window);
+
+            GLFW.SwapInterval(config.flags.HasFlag(WindowFlags.VSync) ? 1 : 0);
 
             GLLoader.LoadBindings(new GLFWBindingsContext());
 
@@ -212,6 +212,7 @@ namespace Gowtu
             }
 
             Graphics.Initialize();
+            Physics.Initialize();
 
             Load?.Invoke();
         }        
@@ -221,6 +222,7 @@ namespace Gowtu
             Time.NewFrame();
             Input.NewFrame();
             GameBehaviour.NewFrame();
+            Physics.NewFrame();
             Resources.NewFrame();
             Audio.NewFrame();
             Graphics.NewFrame();
@@ -236,6 +238,7 @@ namespace Gowtu
         {
             GameBehaviour.OnApplicationClosing();
             Audio.Deinitialize();
+            Physics.Deinitialize();
             Graphics.Deinitialize();
         }
 

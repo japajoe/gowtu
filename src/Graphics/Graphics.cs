@@ -118,32 +118,13 @@ namespace Gowtu
             BindShaderToUniformBuffers(diffuseInstancedShader);
 
             Font font = new Font();
-            if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 32))
+            if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 64))
             {
                 if(font.GenerateTexture())
                 {
                     Resources.AddFont(Constants.GetString(ConstantString.FontDefault), font);
                 }
             }
-
-            // uboLights.BindBlockToShader(diffuseShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-            // uboLights.BindBlockToShader(terrainShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-            // uboLights.BindBlockToShader(diffuseInstancedShader, Light.UBO_BINDING_INDEX, Light.UBO_NAME);
-
-            // uboCamera.BindBlockToShader(diffuseShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-            // uboCamera.BindBlockToShader(terrainShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-            // uboCamera.BindBlockToShader(diffuseInstancedShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-
-            // uboWorld.BindBlockToShader(diffuseShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            // uboWorld.BindBlockToShader(terrainShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            // uboWorld.BindBlockToShader(proceduralSkyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            // uboWorld.BindBlockToShader(skyboxShader, World.UBO_BINDING_INDEX, World.UBO_NAME);
-            // uboWorld.BindBlockToShader(diffuseInstancedShader, Camera.UBO_BINDING_INDEX, Camera.UBO_NAME);
-
-            // uboShadow.BindBlockToShader(diffuseShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            // uboShadow.BindBlockToShader(terrainShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            // uboShadow.BindBlockToShader(depthShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
-            // uboShadow.BindBlockToShader(diffuseInstancedShader, Shadow.UBO_BINDING_INDEX, Shadow.UBO_NAME);
         }
 
         private static void BindShaderToUniformBuffers(Shader shader)

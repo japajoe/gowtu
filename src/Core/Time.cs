@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Diagnostics;
 
 namespace Gowtu
 {
@@ -48,15 +49,15 @@ namespace Gowtu
 
     public sealed class Timer
     {
-        private DateTime tp1;
-        private DateTime tp2;
+        private Stopwatch sw;
         private float deltaTime;
+        private float lastFrameTime;
 
         public Timer()
         {
-            tp1 = DateTime.Now;
-            tp2 = DateTime.Now;
+            sw = Stopwatch.StartNew();
             deltaTime = 0;
+            lastFrameTime = 0;
         }
 
         public float GetDeltaTime()
@@ -66,10 +67,9 @@ namespace Gowtu
 
         public void Update()
         {
-            tp2 = DateTime.Now;
-            TimeSpan timeSpan = tp2 - tp1;
-            deltaTime = (float)timeSpan.TotalSeconds;
-            tp1 = tp2;
+            float currentFrameTime = (float)sw.Elapsed.TotalSeconds;
+            deltaTime = currentFrameTime - lastFrameTime;
+            lastFrameTime = currentFrameTime;
         }
     }
 }

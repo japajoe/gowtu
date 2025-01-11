@@ -127,6 +127,39 @@ namespace Gowtu
             return null;
         }
 
+        public T GetComponentOfSubType<T>() where T : Component
+        {
+            for (int i = 0; i < m_components.Count; i++)
+            {
+                if (m_components[i].GetType().IsSubclassOf(typeof(T)))
+                {
+                    return m_components[i] as T;
+                }
+            }
+
+            return null;
+        }
+
+        public List<T> GetComponentsOfSubType<T>() where T : Component
+        {
+            List<T> c = new List<T>();
+
+            for (int i = 0; i < m_components.Count; i++)
+            {
+                if (m_components[i].GetType().IsSubclassOf(typeof(T)))
+                {
+                    c.Add(m_components[i] as T);
+                }
+            }
+
+            return c;
+        }
+
+        public List<Component> GetComponents()
+        {
+            return m_components;
+        }
+
         public void SetLayer(Layer layer, bool recursive)
         {
             if(recursive)

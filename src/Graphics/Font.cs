@@ -189,10 +189,12 @@ namespace Gowtu
 
             ReadOnlySpan<byte> pTextureData = CollectionsMarshal.AsSpan(m_textureData);
 
-            GL.PixelStorei(PixelStoreParameter.UnpackAlignment, 1);
 
             GL.GenTextures(1, ref m_textureId);
             GL.BindTexture(TextureTarget.Texture2d, m_textureId);
+            
+            GL.PixelStorei(PixelStoreParameter.UnpackAlignment, 1);
+
             GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.R8, textureWidth, textureHeight, 0, PixelFormat.Red, PixelType.UnsignedByte, pTextureData);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
@@ -201,6 +203,7 @@ namespace Gowtu
             GL.GenerateMipmap(TextureTarget.Texture2d);
 
             GL.ObjectLabel(ObjectIdentifier.Texture, (uint)m_textureId, -1, "FontAtlas");
+
 
             GL.BindTexture(TextureTarget.Texture2d, 0);
 
@@ -353,7 +356,7 @@ namespace Gowtu
         private bool Load(FT_FaceRec_ *fontFace) 
         {
             FT_Set_Pixel_Sizes(fontFace, 0, m_pixelSize);
-        
+
             const UInt32 textureWidth = 1024;
             const UInt32 textureHeight = 1024;
             const UInt32 padding = 2;
@@ -362,9 +365,10 @@ namespace Gowtu
             UInt64 height = 0;
 
             Int32 LOAD_RENDER = (int)FT_LOAD_RENDER;
-            Int32 RENDER_MODE_SDF = (int)FT_RENDER_MODE_SDF;
-            Int32 flags = LOAD_RENDER | RENDER_MODE_SDF;
-            ////Int32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
+            //Int32 RENDER_MODE_SDF = (int)FT_RENDER_MODE_SDF;
+            Int32 flags = LOAD_RENDER;
+            //Int32 flags = LOAD_RENDER | RENDER_MODE_SDF;
+            //Int32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
             FT_LOAD loadFlags = (FT_LOAD)flags;
 
             m_textureData = new List<byte>(new byte[textureWidth * textureHeight]);
@@ -385,7 +389,7 @@ namespace Gowtu
                 if(FT_Load_Char(fontFace, new nuint(glyphIdx), loadFlags) != FT_Error.FT_Err_Ok)
                     continue;
 
-                if(FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_NORMAL) != FT_Error.FT_Err_Ok)
+                if(FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_SDF) != FT_Error.FT_Err_Ok)
                     continue;
 
                 if(fontFace->glyph->bitmap.rows > maxRowHeight)

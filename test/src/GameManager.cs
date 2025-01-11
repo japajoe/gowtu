@@ -17,6 +17,8 @@ namespace GowtuApp
         private BatchRenderer batchRenderer;
         private Font defaultFont;
         private bool lightEnabled = true;
+        private Color fogColorDay = new Color(251, 241, 206, 255);
+        private Color fogColorNight = new Color(0.001f, 0.001f, 0.001f, 1.0f);
 
         public bool Loaded
         {
@@ -28,6 +30,9 @@ namespace GowtuApp
 
         private void Start()
         {
+            World.FogDensity *= 3;
+            World.FogColor = fogColorDay;
+
             defaultFont = Resources.FindFont(Constants.GetString(ConstantString.FontDefault));
             GUIStyle.SetStyle1();            
             SetupCamera();
@@ -158,6 +163,18 @@ namespace GowtuApp
             terrainMaterial.UvScale2 = new Vector2(uvScaleX / 5.0f, uvScaleY / 5.0f);
             terrainMaterial.UvScale3 = new Vector2(uvScaleX, uvScaleY);
             terrainMaterial.UvScale4 = new Vector2(uvScaleX / 5.0f, uvScaleY / 5.0f);
+
+            var rb1 = plane.AddComponent<Rigidbody>();
+            rb1.mass = 0;
+            var collider = plane.AddComponent<MeshCollider>();
+            collider.mesh = terrain.GetMesh(0);
+
+            var testCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var rb2 = testCube.AddComponent<Rigidbody>();
+            rb2.mass = 10;
+            var boxCollider = testCube.AddComponent<BoxCollider>();
+            boxCollider.size = new Vector3(1, 1, 1);
+            rb2.MovePosition(new Vector3(0, 100, 0));            
         }
 
         private void SetupObjects()
@@ -335,7 +352,7 @@ namespace GowtuApp
                     for(int i = 0; i < batch.resources.Count; i++)
                     {
                         var font = new Font();
-                        if(font.LoadFromMemory(batch.resources[i].data, batch.resources[i].data.Length, 16))
+                        if(font.LoadFromMemory(batch.resources[i].data, batch.resources[i].data.Length, 64))
                         {
                             font.GenerateTexture();
                             Resources.AddFont(batch.resources[i].filePath, font);
@@ -373,7 +390,7 @@ namespace GowtuApp
             if(!Loaded)
             {
                 const float fontSize = 64;
-                string text = "Loading asset " + currentResourceCount + "/" + totalResourceCount;
+                string text = "Loading asset " + (currentResourceCount+1) + "/" + totalResourceCount;
                 defaultFont.CalculateBounds(text, text.Length, fontSize, out float w, out float h);
                 
                 var viewport = Graphics.GetViewport();
@@ -404,7 +421,7 @@ namespace GowtuApp
                 spheres[i].transform.position = new Vector3(x, 5, z);
             }
         }
-        
+
         private void OnGUI()
         {
             if(!Loaded)
@@ -419,6 +436,20 @@ namespace GowtuApp
                 }
                 GUI.EndWindow();
             }
+
+            // if(ImGuiNET.ImGui.Begin("Font Atlas"))
+            // {
+            //     Font font = Resources.FindFont("Resources/Fonts/SF Sports Night.ttf");
+            //     if(font != null)
+            //     {
+            //         IntPtr handle = new IntPtr(defaultFont.TextureId);
+            //         //IntPtr handle = new IntPtr(font.TextureId);
+            //         ImGuiNET.ImGui.Image(handle, new System.Numerics.Vector2(1024, 1024));
+            //     }
+                
+
+            //     ImGuiNET.ImGui.End();
+            // }
         }
 
         private void ToggleLight(bool enabled)
@@ -427,8 +458,8 @@ namespace GowtuApp
 
             Light.mainLight.gameObject.isActive = lightEnabled;
 
-            World.FogColor = lightEnabled ? Color.White : new Color(0.001f, 0.001f, 0.001f, 1.0f);
-            skyboxMaterial.DiffuseColor = lightEnabled ? Color.White : new Color(0.001f, 0.001f, 0.001f, 1.0f);
+            World.FogColor = lightEnabled ? fogColorDay : fogColorNight;
+            skyboxMaterial.DiffuseColor = lightEnabled ? Color.White : fogColorNight;
         }
     }
 }

@@ -21,11 +21,230 @@
 // SOFTWARE.
 
 using OpenTK.Mathematics;
+using BulletSharp;
+using System.Collections.Generic;
+using System;
 
 namespace Gowtu
 {
     public static class Physics
     {
+        class RigidbodyInfo
+        {
+            public Rigidbody body = null;
+            public RigidBody rigidBody = null;
+            public CollisionShape collisionShape = null;
+        }
+
+        private static bool isInitialized = false;
+        private static DbvtBroadphase broadphase;
+        private static DefaultCollisionConfiguration collisionConfiguration;
+        private static CollisionDispatcher dispatcher;
+        private static SequentialImpulseConstraintSolver solver;
+        private static DiscreteDynamicsWorld dynamicsWorld;
+        private static System.Numerics.Vector3 gravity;
+        private static readonly double fixedUpdateTimeStep = 1.0 / 50;
+        private static double fixedUpdateTimer;
+        private static List<RigidbodyInfo> rigidbodyInfo;
+
+        public static DiscreteDynamicsWorld DynamicsWorld
+        {
+            get
+            {
+                return dynamicsWorld;
+            }
+        }
+
+        internal static void Initialize()
+        {
+            if (isInitialized)
+                return;
+
+            rigidbodyInfo = new List<RigidbodyInfo>();
+
+            gravity = new System.Numerics.Vector3(0, -9.81f, 0);
+
+            broadphase = new DbvtBroadphase();
+            collisionConfiguration = new DefaultCollisionConfiguration();
+            dispatcher = new CollisionDispatcher(collisionConfiguration);
+            solver = new SequentialImpulseConstraintSolver();
+            dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+            //dynamicsWorld.SetInternalTickCallback(WorldPreTickCallback);
+            dynamicsWorld.SetGravity(ref gravity);
+
+            isInitialized = true;
+        }
+
+        internal static void Deinitialize()
+        {
+            if (!isInitialized)
+                return;
+
+            //cleanup in the reverse order of creation/initialization
+            for(int i = rigidbodyInfo.Count -1; i >= 0; i--)
+            {
+                dynamicsWorld.RemoveRigidBody(rigidbodyInfo[i].rigidBody);
+                rigidbodyInfo[i].rigidBody.MotionState.Dispose();
+                rigidbodyInfo[i].rigidBody.Dispose();
+                rigidbodyInfo[i].collisionShape.Dispose();
+            }
+
+            dynamicsWorld.Dispose();
+            solver.Dispose();
+            broadphase.Dispose();
+            dispatcher.Dispose();
+            collisionConfiguration.Dispose();
+
+            isInitialized = false;
+        }
+
+        internal static void Add(Rigidbody rb)
+        {
+            if (rb == null)
+            {
+                System.Console.WriteLine("Failed to add to physics world because there is no rigidbody: " + rb.instanceId);
+                return;
+            }
+
+            GameObject gameObject = rb.gameObject;
+
+            RigidbodyInfo rbInfo = new RigidbodyInfo();
+            rbInfo.body = rb;
+
+            var components = gameObject.GetComponents();
+
+            Collider collider = null;
+
+            if (components != null)
+            {
+                for (int i = 0; i < components.Count; i++)
+                {
+                    if (components[i].GetType().IsSubclassOf(typeof(Collider)))
+                    {
+                        collider = components[i] as Collider;
+                        break;
+                    }
+                }
+            }
+
+            if(collider == null)
+            {
+                System.Console.WriteLine("Failed to add to physics world because there is no collider: " + rb.instanceId);
+                return;
+            }
+
+            var localInertia = new System.Numerics.Vector3();
+
+            if (rb.mass > float.Epsilon)
+                collider.shape.CalculateLocalInertia(rb.mass, out localInertia);
+
+            var rot = gameObject.transform.rotation;
+            var rotation = new System.Numerics.Quaternion(rot.X, rot.Y, rot.Z, rot.W);
+
+            var orientation = System.Numerics.Matrix4x4.CreateFromQuaternion(rotation);
+            var position = System.Numerics.Matrix4x4.CreateTranslation(gameObject.transform.position.X, gameObject.transform.position.Y, gameObject.transform.position.Z);
+
+            var t = gameObject.transform.GetModelMatrix();
+
+            var transformation = new System.Numerics.Matrix4x4(t.M11, t.M12, t.M13, t.M14, t.M21, t.M22, t.M23, t.M24,
+                                               t.M31, t.M32, t.M33, t.M34, t.M41, t.M42, t.M43, t.M44);
+
+            var motionState = new DefaultMotionState(transformation);
+            var rigidBodyCI = new RigidBodyConstructionInfo(rb.mass, motionState, collider.shape, localInertia);
+            var rigidBody = new RigidBody(rigidBodyCI);
+
+            if(rb.isKinematic)
+                rigidBody.CollisionFlags |= CollisionFlags.KinematicObject;
+
+            rigidBody.SetDamping(rb.drag, rb.angularDrag);
+                
+            rbInfo.rigidBody = rigidBody;
+            rbInfo.collisionShape = collider.shape;
+            dynamicsWorld.AddRigidBody(rigidBody);
+            rigidBody.UserObject = rb;
+            rb.SetRigidBody(rigidBody);
+            rigidbodyInfo.Add(rbInfo);
+
+            System.Console.WriteLine("Added to physics world: " + rb.instanceId);
+        }
+
+        internal static void Remove(Rigidbody rb)
+        {
+            if (rb == null)
+                return;
+
+            dynamicsWorld.RemoveRigidBody(rb.rigidBody);
+
+            int index = -1;
+
+            for(int i = 0; i < rigidbodyInfo.Count; i++)
+            {
+                var instanceId = rigidbodyInfo[i].body.instanceId;
+
+                if(instanceId == rb.instanceId)
+                {
+                    rigidbodyInfo[i].rigidBody.MotionState.Dispose();
+                    rigidbodyInfo[i].rigidBody.Dispose();
+                    rigidbodyInfo[i].collisionShape.Dispose();
+                    index = i;
+                    break;
+                }
+            }
+
+            if(index >= 0)
+            {
+                rigidbodyInfo.RemoveAt(index);
+            }
+        }
+
+        internal static void NewFrame()
+        {
+            float deltaTime = Time.DeltaTime;
+
+            // Cap delta time to prevent large jumps
+            fixedUpdateTimer += Math.Min(deltaTime, fixedUpdateTimeStep);
+
+            // Fixed Update Logic
+            while (fixedUpdateTimer >= fixedUpdateTimeStep) 
+            {
+                FixedUpdate(); // Call the fixed update method
+                fixedUpdateTimer -= fixedUpdateTimeStep; // Decrease the timer by the fixed time step
+            }
+        }
+
+        private static void FixedUpdate()
+        {
+            GameBehaviour.OnBehaviourFixedUpdate();
+
+            if (!isInitialized)
+                return;
+
+            dynamicsWorld.StepSimulation(Time.DeltaTime, 1, (float)fixedUpdateTimeStep);
+
+            for (int i = 0; i < rigidbodyInfo.Count; i++)
+            {
+                CollisionObject obj = dynamicsWorld.CollisionObjectArray[i];
+                RigidBody body = RigidBody.Upcast(obj);
+                Rigidbody g = (Rigidbody)obj.UserObject;
+
+                if(!g.gameObject.isActive)
+                    continue;
+
+                if (body != null && body.MotionState != null)
+                {
+                    body.MotionState.GetWorldTransform(out System.Numerics.Matrix4x4 transformation);
+
+                    if (i >= 0)
+                    {
+                        var newPosition = new OpenTK.Mathematics.Vector3(transformation.Translation.X, transformation.Translation.Y, transformation.Translation.Z);
+                        var rotation = transformation.GetRotation();
+                        g.transform.position = newPosition;
+                        g.transform.rotation = new OpenTK.Mathematics.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W);
+                    }
+                }
+            }
+        }
+
         public static bool Raycast(Ray ray, out RaycastHit hit, Layer layerMask = 0)
         {
             return Raycast(ray.origin, ray.direction, ray.length, out hit, layerMask);

@@ -75,6 +75,10 @@ namespace Gowtu
                 {
                     behaviour.LateUpdate += (Action)del;
                 }
+                else if (methods[i].Name == "FixedUpdate")
+                {
+                    behaviour.FixedUpdate += (Action)del;
+                }
                 else if (methods[i].Name == "OnEnable")
                 {
                     behaviour.Enable += (Action)del;
@@ -198,6 +202,15 @@ namespace Gowtu
             }
         }
 
+        internal static void OnBehaviourFixedUpdate()
+        {
+            for(int i = 0; i < behaviours.Count; i++)
+            {
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnFixedUpdate();
+            }
+        }
+
         internal static void OnBehaviourGUI()
         {
             for(int i = 0; i < behaviours.Count; i++)
@@ -234,6 +247,7 @@ namespace Gowtu
 
         public event Action Update;
         public event Action LateUpdate;
+        public event Action FixedUpdate;
         public event Action Start;
         public event Action Awake;
         public event Action Enable;
@@ -285,6 +299,11 @@ namespace Gowtu
         public void OnLateUpdate()
         {
             LateUpdate?.Invoke();
+        }
+
+        public void OnFixedUpdate()
+        {
+            FixedUpdate?.Invoke();
         }
 
         public void OnGUI()

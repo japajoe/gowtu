@@ -205,7 +205,14 @@ namespace Gowtu
                 }
 
                 IntPtr offset = new IntPtr(drawOffset * Marshal.SizeOf<uint>());
+
+                if(items[i].textureIsFont)
+                    GL.DepthMask(false);
+                
                 GL.DrawElements(OpenTK.Graphics.OpenGL.PrimitiveType.Triangles, items[i].indiceCount, DrawElementsType.UnsignedInt, offset);
+                
+                if(items[i].textureIsFont)
+                    GL.DepthMask(true);
 
                 drawOffset += items[i].indiceCount;
 

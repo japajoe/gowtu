@@ -9,15 +9,16 @@ A simple library for game development. I initially made it to [showcase](https:/
 - Frustum culling.
 - Immediate mode custom 2D shape and text rendering with your own shaders.
 - UI rendering with Dear ImGui.
+- Rigidbody physics.
 - Mouse picking.
 - Advanced audio system with full support for spatialization.
 - Asynchronous asset loading from disk or asset packs.
-- Cross platform.
 
 # Dependencies
 - [GLFWNet](https://www.nuget.org/packages/JAJ.Packages.GLFWNet)
 - [OpenTK5](https://www.nuget.org/packages/JAJ.Packages.OpenTK5)
 - [MiniAudioEx](https://www.nuget.org/packages/JAJ.Packages.MiniAudioEx)
+- [BulletSharp](https://www.nuget.org/packages/JAJ.Packages.BulletSharp)
 - [ImGui.NET](https://www.nuget.org/packages/ImGui.NET)
 - [StbImageSharp](https://www.nuget.org/packages/StbImageSharp)
 - [FreeTypeSharp](https://www.nuget.org/packages/FreeTypeSharp)
