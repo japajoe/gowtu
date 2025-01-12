@@ -25,7 +25,7 @@
     <PackageReference Include="JAJ.Packages.GLFWNet" Version="1.0.3" />
     <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="1.7.7" />
     <PackageReference Include="JAJ.Packages.BulletSharp" Version="1.0.1" />
-    <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.3" />
+    <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.4" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="ImGui.NET" Version="1.89.7.1" />
   </ItemGroup>
