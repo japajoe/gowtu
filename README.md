@@ -19,9 +19,9 @@ A simple library for game development. I initially made it to [showcase](https:/
 - [OpenTK5](https://www.nuget.org/packages/JAJ.Packages.OpenTK5)
 - [MiniAudioEx](https://www.nuget.org/packages/JAJ.Packages.MiniAudioEx)
 - [BulletSharp](https://www.nuget.org/packages/JAJ.Packages.BulletSharp)
+- [FreeTypeSharp](https://www.nuget.org/packages/JAJ.Packages.FreeTypeSharp/)
 - [ImGui.NET](https://www.nuget.org/packages/ImGui.NET)
 - [StbImageSharp](https://www.nuget.org/packages/StbImageSharp)
-- [FreeTypeSharp](https://www.nuget.org/packages/FreeTypeSharp)
 
 # Hello world
 ```csharp

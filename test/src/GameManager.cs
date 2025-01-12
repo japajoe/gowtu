@@ -436,20 +436,6 @@ namespace GowtuApp
                 }
                 GUI.EndWindow();
             }
-
-            // if(ImGuiNET.ImGui.Begin("Font Atlas"))
-            // {
-            //     Font font = Resources.FindFont("Resources/Fonts/SF Sports Night.ttf");
-            //     if(font != null)
-            //     {
-            //         IntPtr handle = new IntPtr(defaultFont.TextureId);
-            //         //IntPtr handle = new IntPtr(font.TextureId);
-            //         ImGuiNET.ImGui.Image(handle, new System.Numerics.Vector2(1024, 1024));
-            //     }
-                
-
-            //     ImGuiNET.ImGui.End();
-            // }
         }
 
         private void ToggleLight(bool enabled)

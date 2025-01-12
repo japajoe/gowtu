@@ -204,7 +204,6 @@ namespace Gowtu
 
             GL.ObjectLabel(ObjectIdentifier.Texture, (uint)m_textureId, -1, "FontAtlas");
 
-
             GL.BindTexture(TextureTarget.Texture2d, 0);
 
             return m_textureId > 0;
@@ -347,9 +346,9 @@ namespace Gowtu
             return yOffset;
         }
 
-        private int FT_LOAD_TARGET_(Int32 v)
+        private UInt32 FT_LOAD_TARGET_(UInt32 v)
         {
-            Int32 result = (Int32)((v) & 15) << 16;
+            UInt32 result = (v & 15) << 16;
             return result;
         }
 
@@ -364,12 +363,13 @@ namespace Gowtu
             UInt32 col = 0;
             UInt64 height = 0;
 
-            Int32 LOAD_RENDER = (int)FT_LOAD_RENDER;
-            //Int32 RENDER_MODE_SDF = (int)FT_RENDER_MODE_SDF;
-            Int32 flags = LOAD_RENDER;
-            //Int32 flags = LOAD_RENDER | RENDER_MODE_SDF;
-            //Int32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
-            FT_LOAD loadFlags = (FT_LOAD)flags;
+            UInt32 LOAD_RENDER = (UInt32)FT_LOAD_RENDER;
+            //UInt32 RENDER_MODE_SDF = (UInt32)FT_RENDER_MODE_SDF;
+            
+            UInt32 flags = LOAD_RENDER;
+            //UInt32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
+            
+            FT_LOAD loadFlags = (FT_LOAD)flags; //327684
 
             m_textureData = new List<byte>(new byte[textureWidth * textureHeight]);
 
@@ -386,11 +386,23 @@ namespace Gowtu
 
             for(UInt64 glyphIdx = start; glyphIdx < end; glyphIdx++) 
             {
-                if(FT_Load_Char(fontFace, new nuint(glyphIdx), loadFlags) != FT_Error.FT_Err_Ok)
-                    continue;
+                FT_Error error = FT_Error.FT_Err_Ok;
 
-                if(FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_SDF) != FT_Error.FT_Err_Ok)
+                error = FT_Load_Char(fontFace, new nuint(glyphIdx), loadFlags);
+
+                if(error != FT_Error.FT_Err_Ok)
+                {
+                    //Console.WriteLine("Load_Char error: " + error);
                     continue;
+                }
+
+                error = FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_SDF);
+
+                if(error != FT_Error.FT_Err_Ok)
+                {
+                    //Console.WriteLine("Render_Glyph error: " + error);
+                    continue;
+                }
 
                 if(fontFace->glyph->bitmap.rows > maxRowHeight)
                     maxRowHeight = fontFace->glyph->bitmap.rows;

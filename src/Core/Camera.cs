@@ -150,7 +150,33 @@ namespace Gowtu
             var m = transform.GetModelMatrix();
             m.Invert();
             return m;
-        } 
+        }
+
+        public bool WorldToScreenPoint(Vector3 pointInWorld, out Vector2 screenPoint)
+        {
+            var v = new OpenTK.Mathematics.Vector4(pointInWorld.X, pointInWorld.Y, pointInWorld.Z, 1);            
+            var pointInNdc = v * GetViewMatrix() * GetProjectionMatrix();
+            var viewport = Graphics.GetViewport();
+            pointInNdc.Xyz /= pointInNdc.W;
+            float screenX = (pointInNdc.X + 1) / 2f * viewport.width;
+            float screenY = (1 - pointInNdc.Y) / 2f * viewport.height;
+            screenPoint = new Vector2(screenX, screenY);
+            return pointInNdc.Z < 1.0f;
+        }
+
+        public bool ScreenToWorldPoint(Vector2 screenPoint, out Vector3 worldPoint)
+        {
+            var viewportRect = Graphics.GetViewport();
+            float ndcX = (2.0f * screenPoint.X) / viewportRect.width - 1.0f;
+            float ndcY = 1.0f - (2.0f * screenPoint.Y) / viewportRect.width;
+            Vector4 pointInNdc = new Vector4(ndcX, ndcY, m_near, 1.0f);
+            Matrix4 inverseProjection = Matrix4.Invert(GetProjectionMatrix());
+            Matrix4 inverseView = Matrix4.Invert(GetViewMatrix());
+            Vector4 pointInWorld = pointInNdc * inverseProjection * inverseView;
+            pointInWorld /= pointInWorld.W;
+            worldPoint = new Vector3(pointInWorld.X, pointInWorld.Y, pointInWorld.Z);
+            return worldPoint.Z < 1.0f;
+        }
 
         private void Initialize()
         {

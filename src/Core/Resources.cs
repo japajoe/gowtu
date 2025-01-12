@@ -436,7 +436,7 @@ namespace Gowtu
                         resourceBatchQueue.Enqueue(batch);
                     }
                 }
-            });            
+            });
         }
     }
 
