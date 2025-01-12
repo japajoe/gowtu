@@ -363,13 +363,7 @@ namespace Gowtu
             UInt32 col = 0;
             UInt64 height = 0;
 
-            UInt32 LOAD_RENDER = (UInt32)FT_LOAD_RENDER;
-            //UInt32 RENDER_MODE_SDF = (UInt32)FT_RENDER_MODE_SDF;
-            
-            UInt32 flags = LOAD_RENDER;
-            //UInt32 flags = LOAD_RENDER | FT_LOAD_TARGET_(RENDER_MODE_SDF);
-            
-            FT_LOAD loadFlags = (FT_LOAD)flags; //327684
+            FT_LOAD loadFlags = FT_LOAD_RENDER;
 
             m_textureData = new List<byte>(new byte[textureWidth * textureHeight]);
 

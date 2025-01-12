@@ -104,14 +104,13 @@ namespace GowtuApp
                 var size = new OpenTK.Mathematics.Vector2(viewport.width, viewport.height);
                 Graphics2D.AddRectangle(position, size, 0, Color.White, new Rectangle(), shader.Id);
                 Color color = getColor(new Color(1.0f, 1.0f, 1.0f, 0.2f), 0.12f);
-                RenderText("Gowtu", 16, color, new OpenTK.Mathematics.Vector2(10, 10));
+                RenderText("Gowtu", 32, color, new OpenTK.Mathematics.Vector2(10, 10));
             }
             else
             {
                 Color color = new Color(0, 0, 0, 0.5f);
-                RenderText("Gowtu", 16, color, new OpenTK.Mathematics.Vector2(10, 10));
+                RenderText("Gowtu", 32, color, new OpenTK.Mathematics.Vector2(10, 10));
             }
-
         }
 
         private void OnGUI()

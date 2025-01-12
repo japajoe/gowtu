@@ -179,7 +179,12 @@ namespace Gowtu
 
             OnInitialize();
 
+
+
             GLFW.ShowWindow(window);
+
+            OpenTK.Graphics.OpenGL.GL.Clear(OpenTK.Graphics.OpenGL.ClearBufferMask.ColorBufferBit);
+            OpenTK.Graphics.OpenGL.GL.ClearColor(1, 1, 1, 1);
 
             while(GLFW.WindowShouldClose(window) == 0)
             {

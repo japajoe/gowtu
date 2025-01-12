@@ -101,7 +101,6 @@ namespace GowtuApp
             var camera = Camera.mainCamera;
             camera.transform.position = new Vector3(0, 1, 4);
             camera.farClippingPlane = 10000.0f;
-            camera.clearColor = Color.Black;
 
             camera.gameObject.AddComponent<AudioListener>();
 
@@ -396,7 +395,7 @@ namespace GowtuApp
                 var viewport = Graphics.GetViewport();
                 Vector2 position = new Vector2((viewport.width - w) * 0.5f, (viewport.height - h) * 0.5f);
 
-                Graphics2D.AddText(position, defaultFont, text, fontSize, Color.Red);
+                Graphics2D.AddText(position, defaultFont, text, fontSize, Color.Black);
             }
 
             if(cube == null || spheres == null)
