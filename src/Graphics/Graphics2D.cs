@@ -276,6 +276,158 @@ namespace Gowtu
             AddVertices(command);
         }
 
+        public static void AddRectangleRounded(Vector2 position, Vector2 size, float rotationDegrees, float radius, Color color, Rectangle clippingRect = default(Rectangle), int shaderId = 0, object userData = null)
+        {
+            float roundEdges = 1.0f * radius;
+            float roundTopLeft = 0.0f;
+            float roundTopRight = 0.0f;
+            float roundBottomLeft = 0.0f;
+            float roundBottomRight = 0.0f;
+            bool usePercentage = false;
+            Rectangle rect = new Rectangle(position.X, position.Y, size.X, size.Y);
+            int cornerVertexCount = 8;
+
+            const int sides = 1;
+            int requiredVertices = cornerVertexCount * 4 * sides + sides; //+sides for center vertices
+            int requiredIndices = (cornerVertexCount * 4) * sides * 3;
+
+            CheckTemporaryVertexBuffer(requiredVertices);
+            CheckTemporaryIndexBuffer(requiredIndices);
+
+            int count = cornerVertexCount * 4;
+
+            float tl = Math.Max(0, roundTopLeft + roundEdges);
+            float tr = Math.Max(0, roundTopRight + roundEdges);
+            float bl = Math.Max(0, roundBottomLeft + roundEdges);
+            float br = Math.Max(0, roundBottomRight + roundEdges);
+            float f = (float)(Math.PI * 0.5f / (cornerVertexCount - 1));
+            float a1 = 1.0f;
+            float a2 = 1.0f;
+            float x = 1.0f;
+            float y = 1.0f;
+            Vector2 rs = Vector2.One;
+
+            if (usePercentage)
+            {
+                rs = new Vector2(rect.width, rect.height) * 0.5f;
+                if (rect.width > rect.height)
+                    a1 = rect.height / rect.width;
+                else
+                    a2 = rect.width / rect.height;
+                tl = Math.Clamp(tl, 0.0f, 1.0f);
+                tr = Math.Clamp(tr, 0.0f, 1.0f);
+                bl = Math.Clamp(bl, 0.0f, 1.0f);
+                br = Math.Clamp(br, 0.0f, 1.0f);
+            }
+            else
+            {
+                x = rect.width * 0.5f;
+                y = rect.height * 0.5f;
+                if (tl + tr > rect.width)
+                {
+                    float b = rect.width / (tl + tr);
+                    tl *= b;
+                    tr *= b;
+                }
+                if (bl + br > rect.width)
+                {
+                    float b = rect.width / (bl + br);
+                    bl *= b;
+                    br *= b;
+                }
+                if (tl + bl > rect.height)
+                {
+                    float b = rect.height / (tl + bl);
+                    tl *= b;
+                    bl *= b;
+                }
+                if (tr + br > rect.height)
+                {
+                    float b = rect.height / (tr + br);
+                    tr *= b;
+                    br *= b;
+                }
+            }
+
+            Vertex2D v = vertexBufferTemp[0];
+            v.position = rect.Center;
+            v.uv = Vector2.One * 0.5f;
+            v.color = color;
+            vertexBufferTemp[0] = v;
+
+            for (int i = 0; i < cornerVertexCount; i++ )
+            {
+                float s = (float)Math.Sin((float)i * f);
+                float c = (float)Math.Cos((float)i * f);
+                Vector2 v1 = new Vector2(-x + (1.0f - c) * tl * a1, y - (1.0f - s) * tl * a2);
+                Vector2 v2 = new Vector2(x - (1.0f - s) * tr * a1, y - (1.0f - c) * tr * a2);
+                Vector2 v3 = new Vector2(x - (1.0f - c) * br * a1, -y + (1.0f - s) * br * a2);
+                Vector2 v4 = new Vector2(-x + (1.0f - s) * bl * a1, -y + (1.0f - c) * bl * a2);
+
+                Vertex2D vert1 = vertexBufferTemp[1 + i];
+                Vertex2D vert2 = vertexBufferTemp[1 + cornerVertexCount + i];
+                Vertex2D vert3 = vertexBufferTemp[1 + cornerVertexCount * 2 + i];
+                Vertex2D vert4 = vertexBufferTemp[1 + cornerVertexCount * 3 + i];
+
+                vert1.position = ((v1 * rs) + rect.Center);
+                vert2.position = ((v2 * rs) + rect.Center);
+                vert3.position = ((v3 * rs) + rect.Center);
+                vert4.position = ((v4 * rs) + rect.Center);
+                
+                if(!usePercentage)
+                {
+                    Vector2 adj = new Vector2(2f/rect.width, 2f/rect.height);
+                    v1 = (v1 * adj);
+                    v2 = (v2 * adj);
+                    v3 = (v3 * adj);
+                    v4 = (v4 * adj);
+                }
+                
+                vert1.uv = v1 * 0.5f + Vector2.One * 0.5f;
+                vert2.uv = v2 * 0.5f + Vector2.One * 0.5f;
+                vert3.uv = v3 * 0.5f + Vector2.One * 0.5f;
+                vert4.uv = v4 * 0.5f + Vector2.One * 0.5f;
+
+                vert1.color = color;
+                vert2.color = color;
+                vert3.color = color;
+                vert4.color = color;
+
+                vertexBufferTemp[1 + i] = vert1;
+                vertexBufferTemp[1 + cornerVertexCount + i] = vert2;
+                vertexBufferTemp[1 + cornerVertexCount * 2 + i] = vert3;
+                vertexBufferTemp[1 + cornerVertexCount * 3 + i] = vert4;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                indexBufferTemp[i*3 + 0] = 0;
+                indexBufferTemp[i*3 + 1] = (uint)(i + 1);
+                indexBufferTemp[i*3 + 2] = (uint)(i + 2);
+            }
+            
+            indexBufferTemp[count * 3 - 1] = 1;
+
+            Span<Vertex2D> pVertexBufferTemp = CollectionsMarshal.AsSpan<Vertex2D>(vertexBufferTemp).Slice(0, requiredVertices);
+            Span<uint> pIndexBufferTemp = CollectionsMarshal.AsSpan<uint>(indexBufferTemp).Slice(0, requiredIndices);
+
+            if(rotationDegrees != 0.0f)
+                RotateVertices(pVertexBufferTemp, requiredVertices, rotationDegrees);
+
+            DrawCommand command = new DrawCommand();
+            command.vertices = pVertexBufferTemp;
+            command.indices = pIndexBufferTemp;
+            command.numVertices = requiredVertices;
+            command.numIndices = requiredIndices;
+            command.textureId = textureId;
+            command.textureIsFont = false;
+            command.shaderId = shaderId;
+            command.clippingRect = clippingRect;
+            command.userData = userData;
+
+            AddVertices(command);
+        }
+
         public static void AddCircle(Vector2 position, float radius, int segments, float rotationDegrees, Color color, Rectangle clippingRect = default(Rectangle), int shaderId = 0, object userData = null)
         {
             if(segments < 3)
@@ -1263,6 +1415,16 @@ namespace Gowtu
         public float y;
         public float width;
         public float height;
+
+        public Vector2 Center
+        {
+            get
+            {
+                float centerX = x + (width / 2);
+                float centerY = y + (height / 2);
+                return new Vector2(centerX, centerY);
+            }
+        }
         
         public Rectangle()
         {
