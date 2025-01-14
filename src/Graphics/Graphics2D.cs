@@ -514,8 +514,8 @@ namespace Gowtu
             DrawCommand command = new DrawCommand();
             command.vertices = pVertexBufferTemp;
             command.indices = pIndexBufferTemp;
-            command.numVertices = requiredVertices;
-            command.numIndices = requiredIndices;
+            command.numVertices = vertexIndex;
+            command.numIndices = indiceIndex;
             command.textureId = textureId;
             command.textureIsFont = false;
             command.shaderId = shaderId;
@@ -618,8 +618,8 @@ namespace Gowtu
             DrawCommand command = new DrawCommand();
             command.vertices = pVertexBufferTemp;
             command.indices = pIndexBufferTemp;
-            command.numVertices = requiredVertices;
-            command.numIndices = requiredIndices;
+            command.numVertices = vertexIndex;
+            command.numIndices = indiceIndex;
             command.textureId = textureId;
             command.textureIsFont = false;
             command.shaderId = shaderId;
@@ -681,7 +681,10 @@ namespace Gowtu
             int requiredVertices = text.Length * 4; // 4 vertices per character
             int requiredIndices = text.Length * 6; // 6 indices per character
 
+            //Actual vertex count may be less if new line characters are present
             CheckTemporaryVertexBuffer(requiredVertices);
+
+            //Actual indice count may be less if new line characters are present
             CheckTemporaryIndexBuffer(requiredIndices);
             
             int vertexIndex = 0;
@@ -848,7 +851,7 @@ namespace Gowtu
                     newSize *= 2;
                 }
 
-                vertices.Capacity = newSize;
+                vertices.Resize(newSize);            
                 
                 GL.BindBuffer(BufferTargetARB.ArrayBuffer, VBO);
                 
@@ -872,7 +875,7 @@ namespace Gowtu
                     newSize *= 2;
                 }
 
-                indices.Capacity = newSize;
+                indices.Resize(newSize);
 
                 GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, EBO);
                 
@@ -896,7 +899,7 @@ namespace Gowtu
                     newSize *= 2;
                 }
 
-                items.Capacity = newSize;
+                items.Resize(newSize);
             }
         }
 
@@ -911,13 +914,13 @@ namespace Gowtu
                     newSize *= 2;
                 }
 
-                vertexBufferTemp.Capacity = newSize;
+                vertexBufferTemp.Resize(newSize);
             }
         }
 
         private static void CheckTemporaryIndexBuffer(int numRequiredIndices) 
         {
-            if(indexBufferTemp.Count < (numRequiredIndices)) 
+            if(indexBufferTemp.Count < numRequiredIndices) 
             {
                 int newSize = indexBufferTemp.Count * 2;
             
@@ -926,7 +929,27 @@ namespace Gowtu
                     newSize *= 2;
                 }
 
-                indexBufferTemp.Capacity = newSize;
+                indexBufferTemp.Resize(newSize);
+            }
+        }
+
+        private static void Resize<T>(this List<T> list, int size, T element = default(T))
+        {
+            int count = list.Count;
+
+            if (size < count)
+            {
+                list.RemoveRange(size, count - size);
+            }
+            else if (size > count)
+            {
+                int itemsToAdd = size - list.Count;
+
+                if (size > list.Capacity)   // Optimization
+                    list.Capacity = size;
+
+                for(int i = 0; i < itemsToAdd; i++)
+                    list.Add(element);
             }
         }
 
