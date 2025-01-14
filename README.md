@@ -1,5 +1,5 @@
 # Gowtu
-A simple library for game development. I initially made it to [showcase](https://github.com/japajoe/gowtu/tree/main/test) the capabilities of [my audio library](https://github.com/japajoe/MiniAudioExNET), but things got a bit out of control.
+This is a C# framework for making simple games and other graphical applications. There is quite some functionality to quickly get something going.
 
 # Features
 - Component based design, very similar to Unity.
