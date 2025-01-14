@@ -221,6 +221,8 @@ namespace Gowtu
 
             dynamicsWorld.StepSimulation(Time.DeltaTime, 1, (float)fixedUpdateTimeStep);
 
+            CheckCollisions();
+
             for (int i = 0; i < rigidbodyInfo.Count; i++)
             {
                 CollisionObject obj = dynamicsWorld.CollisionObjectArray[i];
@@ -242,6 +244,36 @@ namespace Gowtu
                         g.transform.rotation = new OpenTK.Mathematics.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W);
                     }
                 }
+            }
+        }
+
+        private static void CheckCollisions()
+        {
+            for(int i = 0; i < dispatcher.NumManifolds; i++)
+            {
+                PersistentManifold manifold = dispatcher.GetManifoldByIndexInternal(i);
+                
+                if(manifold == null)
+                    continue;
+                
+                int numContacts = manifold.NumContacts;
+
+                if(numContacts == 0)
+                    continue;
+
+
+                Rigidbody obj1 = (Rigidbody)manifold.Body0.UserObject;
+
+                if(obj1 == null)
+                    continue;
+                
+
+                Rigidbody obj2 = (Rigidbody)manifold.Body1.UserObject;
+
+                if(obj2 == null)
+                    continue;
+                
+                GameBehaviour.OnBehaviourCollision(obj1, obj2);
             }
         }
 
@@ -349,7 +381,7 @@ namespace Gowtu
             return false;
         }
 
-        private static bool RayIntersectsTriangle(Vector3 origin, Vector3 dir, Vector3 v0, Vector3 v1, Vector3 v2, out float intersection)
+        public static bool RayIntersectsTriangle(Vector3 origin, Vector3 dir, Vector3 v0, Vector3 v1, Vector3 v2, out float intersection)
         {
             intersection = 0;
 

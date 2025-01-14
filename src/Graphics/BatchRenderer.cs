@@ -64,7 +64,8 @@ namespace Gowtu
         {
             m_settings = new RenderSettings();
             m_instanceCount = 0;
-            m_maxInstances = 1048576; // 2 ^ 20
+            //m_maxInstances = 1048576; // 2 ^ 20
+            m_maxInstances = 100000; // 2 ^ 20
             m_instanceVBO = new VertexBufferObject();
             m_instanceData = new List<BatchRendererInstanceData>(new BatchRendererInstanceData[m_maxInstances]);
         }

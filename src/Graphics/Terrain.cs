@@ -250,6 +250,50 @@ namespace Gowtu
             return mesh.Vertices[index].position.Y;
         }
 
+        public bool GetHeightAtPosition(Vector3 position, out float height)
+        {
+            height = 0.0f;
+            Mesh mesh = GetMesh(0);
+            
+            if(mesh == null)
+                return false;
+                
+            if(WorldToTerrainPoint(position, out Vector2 terrainPoint))
+                return false;
+
+            Vector3 origin = position + new Vector3(0, 100000, 0);
+            Vector3 direction = Vector3.UnitY * -100000.0f;
+
+            int x = (int)terrainPoint.X;
+            int y = (int)terrainPoint.Y;
+            int triangleIndex = x * y * 6;
+
+            var p1 = mesh.Vertices[triangleIndex+0].position;
+            var p2 = mesh.Vertices[triangleIndex+1].position;
+            var p3 = mesh.Vertices[triangleIndex+2].position;
+
+            var p4 = mesh.Vertices[triangleIndex+3].position;
+            var p5 = mesh.Vertices[triangleIndex+4].position;
+            var p6 = mesh.Vertices[triangleIndex+5].position;
+
+            bool hasIntersection = false;
+
+            if(Physics.RayIntersectsTriangle(origin, direction, p1, p2, p3, out float t1))
+                hasIntersection = true;
+
+            if(Physics.RayIntersectsTriangle(origin, direction, p4, p5, p6, out float t2))
+                hasIntersection = true;
+
+            if(!hasIntersection)
+                return false;
+
+            float distance = Math.Min(t1, t2);
+            Vector3 hitpoint = origin + (direction * distance);
+
+            height = hitpoint.Y;
+            return true;
+        }
+
         public bool GetVertexAtPoint(int x, int y, out Vector3 position)
         {
             int width = (int)resolution.X;

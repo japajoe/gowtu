@@ -746,8 +746,8 @@ namespace Gowtu
                 pos.X += glyph.advanceX * scale;
             }
 
-            Span<Vertex2D> pVertexBufferTemp = CollectionsMarshal.AsSpan<Vertex2D>(vertexBufferTemp).Slice(0, requiredVertices);
-            Span<uint> pIndexBufferTemp = CollectionsMarshal.AsSpan<uint>(indexBufferTemp).Slice(0, requiredIndices);
+            Span<Vertex2D> pVertexBufferTemp = CollectionsMarshal.AsSpan<Vertex2D>(vertexBufferTemp).Slice(0, vertexIndex);
+            Span<uint> pIndexBufferTemp = CollectionsMarshal.AsSpan<uint>(indexBufferTemp).Slice(0, indiceIndex);
 
             DrawCommand command = new DrawCommand();
             command.vertices = pVertexBufferTemp;
@@ -1089,6 +1089,8 @@ namespace Gowtu
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Linear);
 
             GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, 2, 2, 0, PixelFormat.Rgba, PixelType.UnsignedByte, textureData);
+
+            GL.BindTexture(TextureTarget.Texture2d, 0);
         }
 
         private static unsafe bool CheckShader(int handle, string desc) 

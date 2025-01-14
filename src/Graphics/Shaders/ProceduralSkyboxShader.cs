@@ -60,27 +60,15 @@ void main() {
 }";
 
         public static readonly string fragmentSource = @"#version 330 core
+#include <Core>
 
 uniform float uCloudSpeed = 1.0;
 uniform float uCirrus = 0.4;
 uniform float uCumulus = 0.8;
 uniform vec3 uSunPosition;
 
-layout(std140) uniform World {
-    vec4 fogColor;      //don't use vec3 because the alignment causes issues
-    float fogDensity;
-    float fogGradient;
-    int fogEnabled;
-    float time;
-    float padding1;
-    float padding2;
-    float padding3;
-    float padding4;
-} uWorld;
-
 in vec2 oUV;
 in vec3 oFragPosition;
-
 in float oBr;
 in float oBm;
 in float og;
@@ -113,10 +101,6 @@ float fbm(vec3 p) {
 	f += noise(p) / 12; p = m * p * 1.4;
 	f += noise(p) / 24;
 	return f;
-}
-
-vec4 gamma_correction(vec4 color) {
-    return vec4(pow(vec3(color.xyz), vec3(1.0/2.2)), color.a);
 }
 
 vec4 calculate_sky_color() {

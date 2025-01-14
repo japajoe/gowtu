@@ -42,21 +42,21 @@ void main() {
 layout(triangles, invocations = 5) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout (std140) uniform Shadow {
-    int cascadeCount;
-    float shadowBias;
-    float farPlane;
-    int enabled;
-    mat4 lightSpaceMatrices[16];
-    float cascadePlaneDistances[16];
-} uShadow;
+#include <Core>
 
 void main() {          
-	for (int i = 0; i < 3; ++i) {
-		gl_Position = uShadow.lightSpaceMatrices[gl_InvocationID] * gl_in[i].gl_Position;
-		gl_Layer = gl_InvocationID;
-		EmitVertex();
-	}
+    gl_Position = uShadow.lightSpaceMatrices[gl_InvocationID] * gl_in[0].gl_Position;
+    gl_Layer = gl_InvocationID;
+    EmitVertex();
+
+    gl_Position = uShadow.lightSpaceMatrices[gl_InvocationID] * gl_in[1].gl_Position;
+    gl_Layer = gl_InvocationID;
+    EmitVertex();
+
+    gl_Position = uShadow.lightSpaceMatrices[gl_InvocationID] * gl_in[2].gl_Position;
+    gl_Layer = gl_InvocationID;
+    EmitVertex();
+
 	EndPrimitive();
 }";
 

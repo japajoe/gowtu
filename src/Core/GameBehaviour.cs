@@ -91,6 +91,10 @@ namespace Gowtu
                 {
                     behaviour.GUI += (Action)del;
                 }
+                else if (methods[i].Name == "OnCollision")
+                {
+                    behaviour.Collision += (Action<Rigidbody, Rigidbody>)del;
+                }
                 else if (methods[i].Name == "OnDestroy")
                 {
                     behaviour.Destroy += (Action)del;
@@ -220,6 +224,17 @@ namespace Gowtu
             }
         }
 
+        internal static void OnBehaviourCollision(Rigidbody rb1, Rigidbody rb2)
+        {
+            for(int i = 0; i < behaviours.Count; i++)
+            {
+                if(behaviours[i].GameObject == rb1.gameObject || behaviours[i].GameObject == rb2.gameObject)
+                {
+                    behaviours[i].OnCollision(rb1, rb2);
+                }
+            }
+        }
+
         internal static void OnBehaviourResourceLoaded(Resource resource)
         {
             for(int i = 0; i < behaviours.Count; i++)
@@ -253,6 +268,7 @@ namespace Gowtu
         public event Action Enable;
         public event Action Disable;
         public event Action GUI;
+        public event Action<Rigidbody, Rigidbody> Collision;
         public event Action Destroy;
         public event Action ApplicationQuit;
         public event Action Render;
@@ -309,6 +325,11 @@ namespace Gowtu
         public void OnGUI()
         {
             GUI?.Invoke();
+        }
+
+        public void OnCollision(Rigidbody rb1, Rigidbody rb2)
+        {
+            Collision?.Invoke(rb1, rb2);
         }
 
         public void OnDestroy()

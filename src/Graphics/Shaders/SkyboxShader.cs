@@ -46,30 +46,14 @@ void main() {
 }";
 
         public static readonly string fragmentSource = @"#version 330 core
+#include <Core>
 
 uniform samplerCube uTexture;
 uniform vec4 uDiffuseColor;
 
-layout(std140) uniform World {
-    vec4 fogColor;      //don't use vec3 because the alignment causes issues
-    float fogDensity;
-    float fogGradient;
-    int fogEnabled;
-    float time;
-    float padding1;
-    float padding2;
-    float padding3;
-    float padding4;
-} uWorld;
-
 in vec3 oUV;
 in vec3 oFragPosition;
-
 out vec4 FragColor;
-
-vec4 gamma_correction(vec4 color) {
-    return vec4(pow(vec3(color.xyz), vec3(1.0/2.2)), color.a);
-}
 
 void main() {
     vec3 uv = oUV;

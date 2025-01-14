@@ -145,6 +145,11 @@ namespace Gowtu
                 }
             }
 
+            // shadowCascadeLevels[0] = 0.1f * (camera.farClippingPlane / 50.0f);
+            // shadowCascadeLevels[1] = 0.1f * (camera.farClippingPlane / 25.0f);
+            // shadowCascadeLevels[2] = 0.1f * (camera.farClippingPlane / 10.0f);
+            // shadowCascadeLevels[3] = 0.1f * (camera.farClippingPlane / 2.0f);
+
             // OpenGL adds 12 bytes padding for each float in an array
             // The alignment will therefor be on a 16 byte boundary
             unsafe

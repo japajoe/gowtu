@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="**/demo/**" />
+    <Compile Remove="**/demo/**" />
+    <EmbeddedResource Remove="**/demo/**" />
+    <None Remove="**/demo/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="**/test/**" />
     <Compile Remove="**/test/**" />
     <EmbeddedResource Remove="**/test/**" />

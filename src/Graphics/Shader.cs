@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -28,6 +29,8 @@ namespace Gowtu
 {
     public sealed class Shader
     {
+        private static Dictionary<string,string> includes;
+        
         private int id;
 
         public int Id
@@ -40,6 +43,9 @@ namespace Gowtu
 
         public Shader(string vertexSource, string fragmentSource)
         {
+            vertexSource = AddIncludes(vertexSource);
+            fragmentSource = AddIncludes(fragmentSource);
+
             int vertShader = Compile(vertexSource, ShaderType.VertexShader);
             int fragShader = Compile(fragmentSource, ShaderType.FragmentShader);
 
@@ -64,6 +70,10 @@ namespace Gowtu
 
         public Shader(string vertexSource, string fragmentSource, string geometrySource)
         {
+            vertexSource = AddIncludes(vertexSource);
+            fragmentSource = AddIncludes(fragmentSource);
+            geometrySource = AddIncludes(geometrySource);
+
             int vertShader = Compile(vertexSource, ShaderType.VertexShader);
             int fragShader = Compile(fragmentSource, ShaderType.FragmentShader);
             int geometryShader = Compile(geometrySource, ShaderType.GeometryShader);
@@ -248,6 +258,73 @@ namespace Gowtu
                 return 0;
             }
             return shader;
+        }
+
+        private static void InitializeIncludes()
+        {
+            if(includes != null)
+                return;
+
+            includes = new Dictionary<string, string>();
+            includes.Add("Core", CoreShaderInclude.source);
+        }
+
+        private static string AddIncludes(string shaderSource)
+        {
+            InitializeIncludes();
+
+            if(shaderSource.Contains("#include <"))
+            {
+                string[] lines = shaderSource.Split('\n');
+
+                if(lines?.Length == 0)
+                    return shaderSource;
+
+                bool modified = false;
+
+                for(int i = 0; i < lines.Length; i++)
+                {
+                    if(!lines[i].Contains("#include <"))
+                    {
+                        lines[i] += "\n";
+                        continue;
+                    }
+
+                    if(!lines[i].Contains(">"))
+                    {
+                        lines[i] += "\n";
+                        continue;
+                    }
+
+                    lines[i] = lines[i].Replace("<", "");
+                    lines[i] = lines[i].Replace(">", "");
+                    lines[i] = lines[i].Replace("#include ", "");
+    
+                    if(includes.ContainsKey(lines[i]))
+                    {
+                        lines[i] = includes[lines[i]];
+                        modified = true;
+                    }
+                    else
+                    {
+                        lines[i] += "\n";
+                    }
+                }
+
+                if(modified)
+                {
+                    shaderSource = string.Empty;
+
+                    for(int i = 0; i < lines.Length; i++)
+                    {
+                        shaderSource += lines[i];
+                    }
+
+                    return shaderSource;
+                }
+            }
+
+            return shaderSource;
         }
     }
 }
