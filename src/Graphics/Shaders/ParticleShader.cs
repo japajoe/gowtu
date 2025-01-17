@@ -53,6 +53,8 @@ uniform sampler2D uDiffuseTexture;
 uniform vec2 uUVOffset;
 uniform vec2 uUVScale;
 uniform float uAlphaCutOff;
+uniform float uAmbientStrength;
+uniform float uShininess;
 
 in vec3 oFragPosition;
 in vec3 oNormal;
@@ -62,17 +64,20 @@ in vec4 oColor;
 out vec4 FragColor;
 
 void main() {
-    vec4 texColor = oColor * texture2D(uDiffuseTexture, (oUV + uUVOffset) * uUVScale);
+    vec4 texColor = texture2D(uDiffuseTexture, (oUV + uUVOffset) * uUVScale);
 
     if(texColor.a < uAlphaCutOff)
         discard;
 
+    vec3 normal = normalize(oNormal);
+    vec3 lighting = calculate_lighting(oFragPosition, uCamera.position.xyz, normal, texColor.rgb, oColor.rgb, uAmbientStrength, uShininess);
+
     if(uWorld.fogEnabled > 0) {
         float visibility = calculate_fog(uWorld.fogDensity, uWorld.fogGradient, uCamera.position.xyz, oFragPosition);
-        texColor.rgb = mix(uWorld.fogColor.rgb, texColor.rgb, visibility);
+        lighting.rgb = mix(uWorld.fogColor.rgb, lighting.rgb, visibility);
     }
 
-    FragColor = gamma_correction(texColor);
+    FragColor = gamma_correction(vec4(lighting, texColor.a));
 }";
 
         internal static Shader Create()

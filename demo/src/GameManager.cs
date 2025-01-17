@@ -447,11 +447,6 @@ namespace GowtuApp
                 properties.colorBegin = new Color(0.1f, 0.1f, 0.1f, 0.5f);
                 particleSystem.Emit(1, properties);
             }
-
-            if(Input.GetKeyDown(KeyCode.Space))
-            {
-                Graphics.Suspend3DPass = !Graphics.Suspend3DPass;
-            }
         }
 
         private void OnGUI()
