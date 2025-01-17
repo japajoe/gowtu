@@ -447,6 +447,11 @@ namespace GowtuApp
                 properties.colorBegin = new Color(0.1f, 0.1f, 0.1f, 0.5f);
                 particleSystem.Emit(1, properties);
             }
+
+            if(Input.GetKeyDown(KeyCode.Space))
+            {
+                Graphics.Suspend3DPass = !Graphics.Suspend3DPass;
+            }
         }
 
         private void OnGUI()
@@ -455,12 +460,15 @@ namespace GowtuApp
                 return;
 
             ImGuiNET.ImGui.SetNextWindowPos(new System.Numerics.Vector2(5, 5));
-            if(ImGuiEx.BeginWindow("Light", new System.Numerics.Vector2(128, 32)))
+            if(ImGuiEx.BeginWindow("Light", new System.Numerics.Vector2(128, 64)))
             {
                 if(ImGuiNET.ImGui.Checkbox("Toggle Light", ref lightEnabled))
                 {
                     ToggleLight(lightEnabled);
                 }
+                
+                ImGuiNET.ImGui.Text("FPS " + Time.FPS);
+
                 ImGuiEx.EndWindow();
             }
         }

@@ -65,6 +65,13 @@ namespace Gowtu
         private static ImGuiController imgui = null;
         private static Shadow shadowMap = null;
         private static DepthMaterial depthMaterial;
+        private static bool suspend3DPass = false;
+
+        public static bool Suspend3DPass
+        {
+            get { return suspend3DPass; }
+            set { suspend3DPass = value; }
+        }
 
         internal static void Initialize()
         {
@@ -175,8 +182,15 @@ namespace Gowtu
             }
             else
             {
-                RenderShadowPass();
-                Render3DPass();
+                if(!suspend3DPass)
+                {
+                    RenderShadowPass();
+                    Render3DPass();
+                }
+                else
+                {
+                    Clear();
+                }
             }
             
             Render2DPass();

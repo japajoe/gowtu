@@ -40,6 +40,11 @@ namespace Gowtu
             get => elapsed;
         }
 
+        public static float FPS
+        {
+            get => timer.GetFPS();
+        }
+
         internal static void NewFrame()
         {
             timer.Update();
@@ -52,12 +57,18 @@ namespace Gowtu
         private Stopwatch sw;
         private float deltaTime;
         private float lastFrameTime;
+        private float fpsTimer;
+        private float averageFPS;
+        private int fps;
 
         public Timer()
         {
             sw = Stopwatch.StartNew();
             deltaTime = 0;
             lastFrameTime = 0;
+            fpsTimer = 0;
+            averageFPS = 0;
+            fps = 0;
         }
 
         public float GetDeltaTime()
@@ -65,11 +76,27 @@ namespace Gowtu
             return deltaTime;
         }
 
+        public float GetFPS()
+        {
+            return averageFPS;
+        }
+
         public void Update()
         {
             float currentFrameTime = (float)sw.Elapsed.TotalSeconds;
             deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
+
+            fpsTimer += deltaTime;
+
+            fps++;
+
+            if (fpsTimer > 0.5f)
+            {
+                averageFPS = (float)fps / fpsTimer;
+                fps = 0;
+                fpsTimer = 0.0f;
+            }
         }
     }
 }

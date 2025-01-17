@@ -70,9 +70,11 @@ namespace GowtuApp
                 {
                     case MenuState.None:
                         menuState = MenuState.Main;
+                        Graphics.Suspend3DPass = true;
                         break;
                     case MenuState.Main:
                         menuState = MenuState.None;
+                        Graphics.Suspend3DPass = false;
                         break;
                     case MenuState.Settings:
                         if(audioConfig.dirty)
@@ -146,6 +148,7 @@ namespace GowtuApp
                     menuState = MenuState.None;
                     SetCursor();
                     SetMenuAudio();
+                    Graphics.Suspend3DPass = false;
                 }
 
                 if(ImGuiEx.Button("Settings", buttonSize))
