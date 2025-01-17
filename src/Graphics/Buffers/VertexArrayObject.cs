@@ -61,6 +61,11 @@ namespace Gowtu
             GL.EnableVertexAttribArray(index);
         }
 
+        public void DisableVertexAttribArray(uint index)
+        {
+            GL.DisableVertexAttribArray(index);
+        }
+
         public void VertexAttribPointer(uint index, int size, VertexAttribPointerType type, bool normalized, int stride, IntPtr offsetInBytes)
         {
             GL.VertexAttribPointer(index, size, type, normalized, stride, offsetInBytes);

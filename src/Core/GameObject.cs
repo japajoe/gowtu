@@ -29,6 +29,7 @@ namespace Gowtu
     {
         Cube,
         Plane,
+        ParticleSystem,
         ProceduralSkybox,
         Skybox,
         Quad,
@@ -280,6 +281,13 @@ namespace Gowtu
                     var settings = renderer.GetSettings(0);
                     settings.cullFace = true;
                     settings.depthTest = true;
+                    break;
+                }
+                case PrimitiveType.ParticleSystem:
+                {
+                    g.SetLayer(Layer.Default | Layer.IgnoreCulling | Layer.IgnoreRaycast, true);
+                    var renderer = g.AddComponent<ParticleSystem>();
+                    renderer.renderQueue = 1002;
                     break;
                 }
                 case PrimitiveType.ProceduralSkybox:

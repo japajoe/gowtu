@@ -205,7 +205,7 @@ void main()
         /// </summary>
         public void EndFrame()
         {
-            if (_frameBegun)
+            //if (_frameBegun)
             {
                 _frameBegun = false;
                 ImGui.Render();
@@ -231,10 +231,10 @@ void main()
         {
             float deltaSeconds = Time.DeltaTime;
             
-            if (_frameBegun)
-            {
-                ImGui.Render();
-            }
+            // if (_frameBegun)
+            // {
+            //     ImGui.Render();
+            // }
 
             SetPerFrameImGuiData(deltaSeconds);
             UpdateImGuiInput();

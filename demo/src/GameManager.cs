@@ -52,6 +52,7 @@ namespace GowtuApp
                 "Resources/Textures/billboardgrass0002.png",
                 "Resources/Textures/RedFlower.png",
                 "Resources/Textures/YellowFlower.png",
+                "Resources/Textures/smoke_04.png"
             };
 
             var fontBatch = new List<string>()
@@ -231,6 +232,16 @@ namespace GowtuApp
             cube.transform.position = new Vector3(0, 2, 0);
             cube.transform.scale = new Vector3(1, 1, 1);
             cube.GetComponent<MeshRenderer>().GetMaterial<DiffuseMaterial>(0).DiffuseTexture = Resources.FindTexture<Texture2D>("Resources/Textures/Box.jpg");
+
+            var particles = GameObject.CreatePrimitive(PrimitiveType.ParticleSystem);
+            particles.transform.SetParent(spheres[0].transform);
+            particles.transform.position = spheres[0].transform.position;
+            particleSystem = particles.GetComponent<ParticleSystem>();
+            particleSystem.renderQueue = 1005;
+            particleSystem.Space = ParticleSpace.World;
+            var material = particleSystem.GetMaterial();
+            material.DiffuseTexture = Resources.FindTexture<Texture2D>("Resources/Textures/smoke_04.png");
+            material.AlphaCutOff = 0.05f;
         }
 
         private void SetupVegetation(string texturePath, int instanceCount)
@@ -248,11 +259,11 @@ namespace GowtuApp
             
             batchRenderer.castShadows = false;
             material.ReceiveShadows = true;
-            batchRenderer.renderQueue = 1005;
+            batchRenderer.renderQueue = 1001;
             material.UVScale = new Vector2(1, -1);
 
             int seed = texturePath.GetHashCode();
-            Random rand = new Random(seed);
+            var rand = new System.Random(seed);
 
             var getRandomFloat = () => {
                 float x = (float)rand.NextDouble();
@@ -357,7 +368,7 @@ namespace GowtuApp
                     for(int i = 0; i < batch.resources.Count; i++)
                     {
                         var font = new Font();
-                        if(font.LoadFromMemory(batch.resources[i].data, batch.resources[i].data.Length, 64))
+                        if(font.LoadFromMemory(batch.resources[i].data, batch.resources[i].data.Length, 64, FontRenderMethod.SDF))
                         {
                             font.GenerateTexture();
                             Resources.AddFont(batch.resources[i].filePath, font);
@@ -378,6 +389,8 @@ namespace GowtuApp
 
             batch.resources.Clear();
         }
+
+        ParticleSystem particleSystem = null;
 
         private void OnLoadingComplete()
         {
@@ -426,6 +439,13 @@ namespace GowtuApp
                 float z = (float)Math.Sin(sphereAngle) * radius;
                 
                 spheres[i].transform.position = new Vector3(x, 5, z);
+            }
+
+            if(particleSystem != null)
+            {
+                var properties = particleSystem.Properties;
+                properties.colorBegin = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+                particleSystem.Emit(1, properties);
             }
         }
 

@@ -31,6 +31,12 @@ using static FreeTypeSharp.FT_Render_Mode_;
 
 namespace Gowtu
 {
+    public enum FontRenderMethod
+    {
+        Normal,
+        SDF
+    }
+
     public unsafe sealed class Font
     {
         private Int32 m_textureId;
@@ -38,6 +44,7 @@ namespace Gowtu
         private UInt32 m_maxHeight;
         private UInt32 m_lineHeight;
         private UInt32 m_codePointOfFirstChar;
+        private FontRenderMethod m_fontRenderMethod;
         private List<Glyph> m_glyphs;
         private List<byte> m_textureData;
         private static Dictionary<string,Font> fonts = new Dictionary<string, Font>();
@@ -57,14 +64,19 @@ namespace Gowtu
             get => m_textureId;
         }
 
-        UInt32 CodePointOfFirstChar
+        public UInt32 CodePointOfFirstChar
         {
             get => m_codePointOfFirstChar;
         }
 
-        float LineHeight
+        public float LineHeight
         {
             get => (float)m_lineHeight;
+        }
+
+        public FontRenderMethod RenderMethod
+        {
+            get => m_fontRenderMethod;
         }
 
         public Font()
@@ -74,6 +86,7 @@ namespace Gowtu
             m_maxHeight = 0;
             m_lineHeight = 0;
             m_codePointOfFirstChar = 0;
+            m_fontRenderMethod = FontRenderMethod.Normal;
             m_glyphs = new List<Glyph>();
             m_textureData = new List<byte>();
         }
@@ -92,7 +105,7 @@ namespace Gowtu
             }
         }
 
-        public bool LoadFromFile(string filepath, uint pixelSize)
+        public bool LoadFromFile(string filepath, uint pixelSize, FontRenderMethod renderMethod)
         {
             if(m_textureData.Count > 0) {
                 Console.WriteLine("Could not load font because texture is already generated");
@@ -100,6 +113,7 @@ namespace Gowtu
             }
 
             this.m_pixelSize = pixelSize;
+            this.m_fontRenderMethod = renderMethod;
 
             FT_LibraryRec_ *library = null;
 
@@ -126,7 +140,7 @@ namespace Gowtu
             return result;
         }
         
-        public bool LoadFromMemory(ReadOnlySpan<byte> data, int dataSize, uint pixelSize)
+        public bool LoadFromMemory(ReadOnlySpan<byte> data, int dataSize, uint pixelSize, FontRenderMethod renderMethod)
         {
             if(m_textureData.Count > 0) 
             {
@@ -135,6 +149,7 @@ namespace Gowtu
             }
 
             this.m_pixelSize = pixelSize;
+            this.m_fontRenderMethod = renderMethod;
 
             FT_LibraryRec_ *library;
             
@@ -284,11 +299,8 @@ namespace Gowtu
             height *= GetPixelScale(fontSize);
         }
 
-        public void CalculateCharacterPosition(string text, Int32 size, Int32 characterIndex, float fontSize, out float x, out float y) 
+        public void CalculateCharacterPosition(string text, Int32 size, Int32 characterIndex, float fontSize, ref float x, ref float y) 
         {
-            x = 0;
-            y = 0;
-
             if(size == 0)
                 return;
 
@@ -390,7 +402,7 @@ namespace Gowtu
                     continue;
                 }
 
-                error = FT_Render_Glyph(fontFace->glyph, FT_RENDER_MODE_SDF);
+                error = FT_Render_Glyph(fontFace->glyph, m_fontRenderMethod == FontRenderMethod.Normal ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_SDF);
 
                 if(error != FT_Error.FT_Err_Ok)
                 {

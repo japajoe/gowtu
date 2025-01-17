@@ -175,8 +175,9 @@ namespace Gowtu
 
                     GL.Uniform2f(uniforms[(int)Uniform.Resolution], viewport.width, viewport.height);
 
-                    // //This uniform is only mandatory on default shader
+                    // //These uniforms are only mandatory on default shader
                     GL.Uniform1i(uniforms[(int)Uniform.IsFont], items[i].textureIsFont ? 1 : 0);
+                    GL.Uniform1i(uniforms[(int)Uniform.FontHasSDF], items[i].fontHasSDF ? 1 : 0);
                 }
                 else 
                 {
@@ -269,6 +270,7 @@ namespace Gowtu
             command.numIndices = 6;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -278,11 +280,17 @@ namespace Gowtu
 
         public static void AddRectangleRounded(Vector2 position, Vector2 size, float rotationDegrees, float radius, Color color, Rectangle clippingRect = default(Rectangle), int shaderId = 0, object userData = null)
         {
+            AddRectangleRoundedEx(position, size, rotationDegrees, radius, 0.0f, 0.0f, 0.0f, 0.0f, color, clippingRect, shaderId, userData);
+        }
+
+        public static void AddRectangleRoundedEx(Vector2 position, Vector2 size, float rotationDegrees, float radius, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius, Color color, Rectangle clippingRect = default(Rectangle), int shaderId = 0, object userData = null)
+        {
+            //Source https://github.com/bburrough/RoundedQuadMesh
             float roundEdges = 1.0f * radius;
-            float roundTopLeft = 0.0f;
-            float roundTopRight = 0.0f;
-            float roundBottomLeft = 0.0f;
-            float roundBottomRight = 0.0f;
+            float roundTopLeft = bottomLeftRadius;
+            float roundTopRight = bottomRightRadius;
+            float roundBottomLeft = topLeftRadius;
+            float roundBottomRight = topRightRadius;
             bool usePercentage = false;
             Rectangle rect = new Rectangle(position.X, position.Y, size.X, size.Y);
             int cornerVertexCount = 8;
@@ -421,6 +429,7 @@ namespace Gowtu
             command.numIndices = requiredIndices;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -474,6 +483,7 @@ namespace Gowtu
             command.numIndices = segments * 3;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -515,6 +525,7 @@ namespace Gowtu
             command.numIndices = 3;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -601,6 +612,7 @@ namespace Gowtu
             command.numIndices = 6;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -670,6 +682,7 @@ namespace Gowtu
             command.numIndices = indiceIndex;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -774,6 +787,7 @@ namespace Gowtu
             command.numIndices = indiceIndex;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -818,6 +832,7 @@ namespace Gowtu
             command.numIndices = 6;
             command.textureId = textureId;
             command.textureIsFont = false;
+            command.fontHasSDF = false;
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = userData;
@@ -845,6 +860,7 @@ namespace Gowtu
             
             Vector2 pos = new Vector2(position.X, position.Y);
             pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
+            
             float originX = pos.X;
             float originY = pos.Y;
             float scale = font.GetPixelScale(fontSize);
@@ -911,6 +927,7 @@ namespace Gowtu
             command.numIndices = indiceIndex;
             command.textureId = font.TextureId;
             command.textureIsFont = true;
+            command.fontHasSDF = (font.RenderMethod == FontRenderMethod.SDF);
             command.shaderId = shaderId;
             command.clippingRect = clippingRect;
             command.userData = null;
@@ -940,6 +957,7 @@ namespace Gowtu
             drawListItem.shaderId = command.shaderId == 0 ? shaderId : command.shaderId;
             drawListItem.textureId = command.textureId;
             drawListItem.textureIsFont = command.textureIsFont;
+            drawListItem.fontHasSDF = command.fontHasSDF;
             drawListItem.clippingRect = command.clippingRect;
             drawListItem.userData = command.userData;
 
@@ -1204,6 +1222,7 @@ namespace Gowtu
             uniform float uTime;
             uniform vec2 uResolution;
             uniform int uIsFont;
+            uniform int uFontHasSDF;
 
             in vec2 oTexCoord;
             in vec4 oColor;
@@ -1211,12 +1230,20 @@ namespace Gowtu
 
             void main() {
                 if(uIsFont > 0) {
-                    vec4 sample = texture(uTexture, oTexCoord);
-                    float d = sample.r;
-                    float aaf = fwidth(d);
-                    float alpha = smoothstep(0.5 - aaf, 0.5 + aaf, d);
-                    FragColor = vec4(oColor.rgb, alpha) * oColor;
-                    //FragColor = vec4(1);
+                    if(uFontHasSDF > 0) {
+                        vec4 sample = texture(uTexture, oTexCoord);
+                        float d = sample.r;
+                        float aaf = fwidth(d);
+                        float alpha = smoothstep(0.5 - aaf, 0.5 + aaf, d);
+                        FragColor = vec4(oColor.rgb, alpha) * oColor;
+                    } else {
+                        vec4 sample = texture(uTexture, oTexCoord);
+
+                        if(sample.r == 0.0)
+                            discard;
+
+                        FragColor = vec4(oColor.rgb, 1.0) * sample.r;
+                    }
                 } else {
                     FragColor = texture(uTexture, oTexCoord) * oColor;
                 }
@@ -1247,6 +1274,7 @@ namespace Gowtu
             uniforms[(int)Uniform.Resolution] = GL.GetUniformLocation(shaderId, "uResolution");
             uniforms[(int)Uniform.Projection] = GL.GetUniformLocation(shaderId, "uProjection");
             uniforms[(int)Uniform.IsFont] = GL.GetUniformLocation(shaderId, "uIsFont");
+            uniforms[(int)Uniform.FontHasSDF] = GL.GetUniformLocation(shaderId, "uFontHasSDF");
             uniforms[(int)Uniform.Time] = GL.GetUniformLocation(shaderId, "uTime");
         }
 
@@ -1320,6 +1348,7 @@ namespace Gowtu
         public int indiceCount;
         public int indiceOffset;
         public bool textureIsFont;
+        public bool fontHasSDF;
         public Rectangle clippingRect;
         public object userData;
     }
@@ -1333,6 +1362,7 @@ namespace Gowtu
         public int textureId;
         public int shaderId;
         public bool textureIsFont;
+        public bool fontHasSDF;
         public Rectangle clippingRect;
         public object userData;
 
@@ -1344,6 +1374,7 @@ namespace Gowtu
             this.numIndices = 0; 
             this.textureId = 0; 
             this.textureIsFont = false;
+            this.fontHasSDF = false;
             this.clippingRect = new Rectangle(0, 0, 0, 0);
             this.userData = null;
         }
@@ -1366,6 +1397,7 @@ namespace Gowtu
         Texture,
         Time,
         IsFont,
+        FontHasSDF,
         COUNT
     }
 

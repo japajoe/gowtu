@@ -32,7 +32,7 @@ namespace Gowtu
         private static Mouse mouse = new Mouse();
         private static Dictionary<string, AxisInfo> keyToAxisDictionary = new Dictionary<string, AxisInfo>();
 
-        internal static Keyboard Keyboard
+        public static Keyboard Keyboard
         {
             get
             {
@@ -40,7 +40,7 @@ namespace Gowtu
             }
         }
 
-        internal static Mouse Mouse
+        public static Mouse Mouse
         {
             get
             {

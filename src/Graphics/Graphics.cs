@@ -98,6 +98,7 @@ namespace Gowtu
             var terrainShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderTerrain), TerrainShader.Create());
             var depthShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDepth), DepthShader.Create());
             var diffuseInstancedShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDiffuseInstanced), DiffuseInstancedShader.Create());
+            var particleShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderParticle), ParticleShader.Create());
 
             Resources.AddMesh(Constants.GetString(ConstantString.MeshCube), MeshGenerator.CreateCube(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshPlane), MeshGenerator.CreatePlane(Vector3.One));
@@ -116,9 +117,10 @@ namespace Gowtu
             BindShaderToUniformBuffers(terrainShader);
             BindShaderToUniformBuffers(depthShader);
             BindShaderToUniformBuffers(diffuseInstancedShader);
+            BindShaderToUniformBuffers(particleShader);
 
             Font font = new Font();
-            if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 64))
+            if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 32, FontRenderMethod.SDF))
             {
                 if(font.GenerateTexture())
                 {
@@ -129,6 +131,12 @@ namespace Gowtu
 
         private static void BindShaderToUniformBuffers(Shader shader)
         {
+            if(shader == null)
+            {
+                Console.WriteLine("Can't bind shader to uniform buffers because shader is null");
+                return;
+            }
+
             var uboLights = Resources.FindUniformBuffer(Light.UBO_NAME);
             var uboCamera = Resources.FindUniformBuffer(Camera.UBO_NAME);
             var uboWorld = Resources.FindUniformBuffer(Camera.UBO_NAME);
