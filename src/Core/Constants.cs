@@ -33,6 +33,8 @@ namespace Gowtu
                     return Shadow.UBO_NAME;
                 case ConstantString.UniformBufferWorld:
                     return World.UBO_NAME;
+                case ConstantString.MeshCapsule:
+                    return "Capsule";
                 case ConstantString.MeshCube:
                     return "Cube";
                 case ConstantString.MeshPlane:
@@ -80,6 +82,7 @@ namespace Gowtu
     public enum ConstantString
     {
         FontDefault,
+        MeshCapsule,
         MeshCube,
         MeshPlane,
         MeshQuad,

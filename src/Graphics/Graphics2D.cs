@@ -45,7 +45,6 @@ namespace Gowtu
         private static List<Vertex2D> vertexBufferTemp; //Temporary buffer used by some 'add' functions with dynamic size requirements
         private static List<uint> indexBufferTemp; //Temporary buffer used by some 'add' functions with dynamic size requirements
         private static GLStateInfo glState;
-        private static float elapsedTime;
         private static int numDrawCalls;
 
         public static event UniformUpdateCallback UniformUpdate;
@@ -74,7 +73,6 @@ namespace Gowtu
             indiceCount = 0;
             vertexBufferTemp = new List<Vertex2D>();
             indexBufferTemp = new List<uint>();
-            elapsedTime = 0.0f;
             numDrawCalls = 0;
 
             CreateBuffers();
@@ -88,7 +86,6 @@ namespace Gowtu
 
             if(itemCount == 0) 
             {
-                elapsedTime += Time.DeltaTime;
                 return;
             }
 
@@ -171,7 +168,7 @@ namespace Gowtu
                         }
                     }
                     
-                    GL.Uniform1f(uniforms[(int)Uniform.Time], elapsedTime);
+                    GL.Uniform1f(uniforms[(int)Uniform.Time], Time.Elapsed);
 
                     GL.Uniform2f(uniforms[(int)Uniform.Resolution], viewport.width, viewport.height);
 
@@ -198,7 +195,7 @@ namespace Gowtu
                         }
                     }
                     
-                    GL.Uniform1f(GL.GetUniformLocation(lastShaderId, "uTime"), elapsedTime);
+                    GL.Uniform1f(GL.GetUniformLocation(lastShaderId, "uTime"), Time.Elapsed);
 
                     GL.Uniform2f(GL.GetUniformLocation(lastShaderId, "uResolution"), viewport.width, viewport.height);
                     
@@ -235,8 +232,6 @@ namespace Gowtu
             itemCount = 0;
             vertexCount = 0;
             indiceCount = 0;
-
-            elapsedTime += Time.DeltaTime;
         }
 
         public static void AddRectangle(Vector2 position, Vector2 size, float rotationDegrees, Color color, Rectangle clippingRect = default(Rectangle), int shaderId = 0, object userData = null) 
@@ -287,27 +282,26 @@ namespace Gowtu
         {
             //Source https://github.com/bburrough/RoundedQuadMesh
             float roundEdges = 1.0f * radius;
-            float roundTopLeft = bottomLeftRadius;
-            float roundTopRight = bottomRightRadius;
-            float roundBottomLeft = topLeftRadius;
-            float roundBottomRight = topRightRadius;
+            float roundBottomLeft = bottomLeftRadius;
+            float roundBottomRight = bottomRightRadius;
+            float roundTopLeft = topLeftRadius;
+            float roundTopRight = topRightRadius;
             bool usePercentage = false;
             Rectangle rect = new Rectangle(position.X, position.Y, size.X, size.Y);
             int cornerVertexCount = 8;
 
-            const int sides = 1;
-            int requiredVertices = cornerVertexCount * 4 * sides + sides; //+sides for center vertices
-            int requiredIndices = (cornerVertexCount * 4) * sides * 3;
+            int requiredVertices = (cornerVertexCount * 4) + 1;
+            int requiredIndices = (cornerVertexCount * 4) * 3;
 
             CheckTemporaryVertexBuffer(requiredVertices);
             CheckTemporaryIndexBuffer(requiredIndices);
 
             int count = cornerVertexCount * 4;
 
-            float tl = Math.Max(0, roundTopLeft + roundEdges);
-            float tr = Math.Max(0, roundTopRight + roundEdges);
             float bl = Math.Max(0, roundBottomLeft + roundEdges);
             float br = Math.Max(0, roundBottomRight + roundEdges);
+            float tl = Math.Max(0, roundTopLeft + roundEdges);
+            float tr = Math.Max(0, roundTopRight + roundEdges);
             float f = (float)(Math.PI * 0.5f / (cornerVertexCount - 1));
             float a1 = 1.0f;
             float a2 = 1.0f;
@@ -322,38 +316,38 @@ namespace Gowtu
                     a1 = rect.height / rect.width;
                 else
                     a2 = rect.width / rect.height;
-                tl = Math.Clamp(tl, 0.0f, 1.0f);
-                tr = Math.Clamp(tr, 0.0f, 1.0f);
                 bl = Math.Clamp(bl, 0.0f, 1.0f);
                 br = Math.Clamp(br, 0.0f, 1.0f);
+                tl = Math.Clamp(tl, 0.0f, 1.0f);
+                tr = Math.Clamp(tr, 0.0f, 1.0f);
             }
             else
             {
                 x = rect.width * 0.5f;
                 y = rect.height * 0.5f;
-                if (tl + tr > rect.width)
-                {
-                    float b = rect.width / (tl + tr);
-                    tl *= b;
-                    tr *= b;
-                }
                 if (bl + br > rect.width)
                 {
                     float b = rect.width / (bl + br);
                     bl *= b;
                     br *= b;
                 }
-                if (tl + bl > rect.height)
+                if (tl + tr > rect.width)
                 {
-                    float b = rect.height / (tl + bl);
+                    float b = rect.width / (tl + tr);
                     tl *= b;
-                    bl *= b;
-                }
-                if (tr + br > rect.height)
-                {
-                    float b = rect.height / (tr + br);
                     tr *= b;
+                }
+                if (bl + tl > rect.height)
+                {
+                    float b = rect.height / (bl + tl);
+                    bl *= b;
+                    tl *= b;
+                }
+                if (br + tr > rect.height)
+                {
+                    float b = rect.height / (br + tr);
                     br *= b;
+                    tr *= b;
                 }
             }
 
@@ -367,10 +361,10 @@ namespace Gowtu
             {
                 float s = (float)Math.Sin((float)i * f);
                 float c = (float)Math.Cos((float)i * f);
-                Vector2 v1 = new Vector2(-x + (1.0f - c) * tl * a1, y - (1.0f - s) * tl * a2);
-                Vector2 v2 = new Vector2(x - (1.0f - s) * tr * a1, y - (1.0f - c) * tr * a2);
-                Vector2 v3 = new Vector2(x - (1.0f - c) * br * a1, -y + (1.0f - s) * br * a2);
-                Vector2 v4 = new Vector2(-x + (1.0f - s) * bl * a1, -y + (1.0f - c) * bl * a2);
+                Vector2 v1 = new Vector2(-x + (1.0f - c) * bl * a1, y - (1.0f - s) * bl * a2);
+                Vector2 v2 = new Vector2(x - (1.0f - s) * br * a1, y - (1.0f - c) * br * a2);
+                Vector2 v3 = new Vector2(x - (1.0f - c) * tr * a1, -y + (1.0f - s) * tr * a2);
+                Vector2 v4 = new Vector2(-x + (1.0f - s) * tl * a1, -y + (1.0f - c) * tl * a2);
 
                 Vertex2D vert1 = vertexBufferTemp[1 + i];
                 Vertex2D vert2 = vertexBufferTemp[1 + cornerVertexCount + i];
@@ -384,7 +378,7 @@ namespace Gowtu
                 
                 if(!usePercentage)
                 {
-                    Vector2 adj = new Vector2(2f/rect.width, 2f/rect.height);
+                    Vector2 adj = new Vector2(2.0f / rect.width, 2.0f / rect.height);
                     v1 = (v1 * adj);
                     v2 = (v2 * adj);
                     v3 = (v3 * adj);
@@ -472,8 +466,8 @@ namespace Gowtu
             for (int i = 0; i < segments; ++i) 
             {
                 indexBufferTemp[i * 3] = 0; // Center vertex (if added at 0 index)
-                indexBufferTemp[i * 3 + 1] = (uint)i;
-                indexBufferTemp[i * 3 + 2] = (uint)((i + 1) % segments); // Wrap around to form a circle
+                indexBufferTemp[i * 3 + 1] = (uint)((i + 1) % segments); // Wrap around to form a circle
+                indexBufferTemp[i * 3 + 2] = (uint)i;
             }
 
             DrawCommand command = new DrawCommand();
@@ -515,7 +509,7 @@ namespace Gowtu
 
             uint[] indices = 
             {
-                0, 1, 2, 
+                0, 2, 1, 
             };
 
             DrawCommand command = new DrawCommand();
@@ -601,8 +595,8 @@ namespace Gowtu
 
             uint[] indices = 
             {
-                0, 1, 2, 
-                0, 2, 3
+                0, 2, 1,
+                0, 3, 2
             };
 
             DrawCommand command = new DrawCommand();
@@ -662,11 +656,11 @@ namespace Gowtu
                 vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(p2.X + perpendicular.X, p2.Y + perpendicular.Y), new Vector2(1, 1), color);
 
                 indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
-                indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+2] = (uint)(1 + vertexIndex);
                 indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
-                indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
+                indexBufferTemp[indiceIndex+4] = (uint)(3 + vertexIndex);
+                indexBufferTemp[indiceIndex+5] = (uint)(2 + vertexIndex);
 
                 vertexIndex += 4;
                 indiceIndex += 6;
@@ -767,11 +761,11 @@ namespace Gowtu
                 vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(p2.X + perpendicular.X, p2.Y + perpendicular.Y), new Vector2(1, 1), color);
 
                 indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+1] = (uint)(1 + vertexIndex);
-                indexBufferTemp[indiceIndex+2] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex);
+                indexBufferTemp[indiceIndex+2] = (uint)(1 + vertexIndex);
                 indexBufferTemp[indiceIndex+3] = (uint)(0 + vertexIndex);
-                indexBufferTemp[indiceIndex+4] = (uint)(2 + vertexIndex);
-                indexBufferTemp[indiceIndex+5] = (uint)(3 + vertexIndex);
+                indexBufferTemp[indiceIndex+4] = (uint)(3 + vertexIndex);
+                indexBufferTemp[indiceIndex+5] = (uint)(2 + vertexIndex);
 
                 vertexIndex += 4;
                 indiceIndex += 6;
@@ -808,12 +802,17 @@ namespace Gowtu
             Vector2 uvBottomRight = new Vector2(uv1.X, uv1.Y);
             Vector2 uvTopRight = new Vector2(uv1.X, uv0.Y);
 
-            Vertex2D[] vertices = 
+            Vertex2D v1 = new Vertex2D(new Vector2(position.X, position.Y), uvTopLeft, color);
+            Vertex2D v2 = new Vertex2D(new Vector2(position.X, position.Y + size.Y), uvBottomLeft, color);
+            Vertex2D v3 = new Vertex2D(new Vector2(position.X + size.X, position.Y + size.Y), uvBottomRight, color);
+            Vertex2D v4 = new Vertex2D(new Vector2(position.X + size.X, position.Y), uvTopRight, color);
+
+            Vertex2D[] vertices =  
             {
-                new Vertex2D(new Vector2(position.X, position.Y), uvTopLeft, color), // top left
-                new Vertex2D(new Vector2(position.X, position.Y + size.Y), uvBottomLeft, color), // bottom left
-                new Vertex2D(new Vector2(position.X + size.X, position.Y + size.Y), uvBottomRight, color), // bottom right
-                new Vertex2D(new Vector2(position.X + size.X, position.Y), uvTopRight, color)  // top right
+                v1, //Top left
+                v2, //Bottom left
+                v3, //Bottom right
+                v4  //Top right
             };
 
             if(rotationDegrees != 0.0f)
@@ -856,7 +855,6 @@ namespace Gowtu
             
             int vertexIndex = 0;
             int indiceIndex = 0;
-            Color currentColor = color;
             
             Vector2 pos = new Vector2(position.X, position.Y);
             pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
@@ -899,10 +897,10 @@ namespace Gowtu
                     new Vector2(glyph.u1,  glyph.v0)
                 };
 
-                vertexBufferTemp[vertexIndex+0] = new Vertex2D(new Vector2(glyphVertices[0].X, glyphVertices[0].Y), glyphTextureCoords[0], currentColor);
-                vertexBufferTemp[vertexIndex+1] = new Vertex2D(new Vector2(glyphVertices[1].X, glyphVertices[1].Y), glyphTextureCoords[1], currentColor);
-                vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], currentColor);
-                vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], currentColor);
+                vertexBufferTemp[vertexIndex+0] = new Vertex2D(new Vector2(glyphVertices[0].X, glyphVertices[0].Y), glyphTextureCoords[0], color);
+                vertexBufferTemp[vertexIndex+1] = new Vertex2D(new Vector2(glyphVertices[1].X, glyphVertices[1].Y), glyphTextureCoords[1], color);
+                vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], color);
+                vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], color);
 
                 indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex); // Bottom-right
                 indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex); // Top-left
@@ -1160,15 +1158,25 @@ namespace Gowtu
 
         private static void CreateBuffers() 
         {
-            const uint size = 2 << 15;
+            const uint sizeItems = 1024;
+            const uint sizeVertices = 2 << 15;
+            const uint sizeIndices = 2 << 15;
 
-            for(uint i = 0; i < size; i++)
+            for(uint i = 0; i < sizeItems; i++)
             {
                 items.Add(new DrawListItem());
+            }
+            
+            for(uint i = 0; i < sizeVertices; i++)
+            {
                 vertices.Add(new Vertex2D());
-                indices.Add(0);
                 vertexBufferTemp.Add(new Vertex2D());
-                indexBufferTemp.Add(0);
+            }
+
+            for(uint i = 0; i < sizeIndices; i++)
+            {
+                indices.Add(0);
+                indexBufferTemp.Add(0);                
             }
 
             GL.GenVertexArrays(1, ref VAO);

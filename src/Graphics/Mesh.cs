@@ -541,6 +541,86 @@ namespace Gowtu
             return mesh;
         }
 
+        public static Mesh CreateIcosahedron(Vector3 scale, int detail)
+        {
+            if(detail < 0)
+                detail = 0;
+
+            List<Vertex> vertices = new List<Vertex>();
+            List<uint> indices = new List<uint>();
+
+            float t = (1.0f + (float)Math.Sqrt(5.0f)) / 2.0f;
+
+            vertices.Add(new Vertex(new Vector3(-1, t, 0), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(1, t, 0), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(-1, -t, 0), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(1, -t, 0), Vector3.Zero, Vector2.Zero));
+
+            vertices.Add(new Vertex(new Vector3(0, -1, t), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(0, 1, t), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(0, -1, -t), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(0, 1, -t), Vector3.Zero, Vector2.Zero));
+
+            vertices.Add(new Vertex(new Vector3(t, 0, -1), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(t, 0, 1), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(-t, 0, -1), Vector3.Zero, Vector2.Zero));
+            vertices.Add(new Vertex(new Vector3(-t, 0, 1), Vector3.Zero, Vector2.Zero));
+
+            indices.AddRange(new uint[] {
+                0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11,
+                1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6, 7, 1, 8,
+                3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9,
+                4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1
+            });
+
+            for (int i = 0; i < detail; i++)
+            {
+                Dictionary<(uint, uint), uint> midPointCache = new Dictionary<(uint, uint), uint>();
+
+                uint GetMidPoint(uint a, uint b)
+                {
+                    var key = a < b ? (a, b) : (b, a);
+                    if (midPointCache.TryGetValue(key, out uint value))
+                        return value;
+
+                    Vector3 mid = Vector3.Normalize((vertices[(int)a].position + vertices[(int)b].position) / 2.0f);
+                    uint index = (uint)vertices.Count;
+                    vertices.Add(new Vertex(mid, Vector3.Zero, Vector2.Zero));
+                    midPointCache[key] = index;
+                    return index;
+                }
+
+                List<uint> newIndices = new List<uint>();
+                for (int j = 0; j < indices.Count; j += 3)
+                {
+                    uint v1 = indices[j];
+                    uint v2 = indices[j + 1];
+                    uint v3 = indices[j + 2];
+
+                    uint a = GetMidPoint(v1, v2);
+                    uint b = GetMidPoint(v2, v3);
+                    uint c = GetMidPoint(v3, v1);
+
+                    newIndices.AddRange(new uint[] { v1, a, c, v2, b, a, v3, c, b, a, b, c });
+                }
+                indices = newIndices;
+            }
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                Vector3 n = Vector3.Normalize(vertices[i].position);
+                vertices[i] = new Vertex(n, n, new Vector2((float)(Math.Atan2(n.X, n.Z) / (2 * Math.PI) + 0.5), (float)(Math.Asin(n.Y) / Math.PI + 0.5)));
+            }
+
+            Vertex[] verts = vertices.ToArray();
+            uint[] idx = indices.ToArray();
+
+            SetScale(verts, scale);
+            Mesh mesh = new Mesh(verts, idx, true);
+            mesh.Generate();
+            return mesh;
+        }
+
         public static Mesh CreateSphere(Vector3 scale)
         {
             List<Vertex> vertices = new List<Vertex>();
@@ -626,6 +706,130 @@ namespace Gowtu
             return mesh;
         }
 
+        public static Mesh CreateCapsule(Vector3 scale)
+        {
+            float height = 2.0f;
+            float radius = 0.5f;   
+            int segments = 32;
+            int rings = 8;
+            float cylinderHeight = height - radius * 2;
+            int vertexCount = 2 * rings * segments + 2;
+            int triangleCount = 4 * rings * segments;
+            float horizontalAngle = 360.0f / segments;
+            float verticalAngle = 90.0f / rings;
+
+            Vertex[] vertices = new Vertex[vertexCount];
+            uint[] indices = new uint[3 * triangleCount];
+
+            int vi = 2;
+            int ti = 0;
+            int topCapIndex = 0;
+            int bottomCapIndex = 1;
+
+            vertices[topCapIndex].position = new Vector3(0, cylinderHeight / 2 + radius, 0);
+            vertices[topCapIndex].normal = new Vector3(0, 1, 0);
+            vertices[bottomCapIndex].position = new Vector3(0, -cylinderHeight / 2 - radius, 0);
+            vertices[bottomCapIndex].normal = new Vector3(0, -1, 0);
+
+            for (int s = 0; s < segments; s++)
+            {
+                for (int r = 1; r <= rings; r++)
+                {
+                    // Top cap vertex
+                    Vector3 normal = PointOnSphere(1, s * horizontalAngle, 90 - r * verticalAngle);
+                    Vector3 vertex = new Vector3(radius * normal.X, radius * normal.Y + cylinderHeight / 2, radius * normal.Z);
+                    vertices[vi].position = vertex;
+                    vertices[vi].normal = normal;
+                    vi++;
+
+                    // Bottom cap vertex
+                    vertices[vi].position = new Vector3(vertex.X, -vertex.Y, vertex.Z);
+                    vertices[vi].normal = new Vector3(normal.X, -normal.Y, normal.Z);
+                    vi++;
+
+                    int top_s1r1 = vi - 2;
+                    int top_s1r0 = vi - 4;
+                    int bot_s1r1 = vi - 1;
+                    int bot_s1r0 = vi - 3;
+                    int top_s0r1 = top_s1r1 - 2 * rings;
+                    int top_s0r0 = top_s1r0 - 2 * rings;
+                    int bot_s0r1 = bot_s1r1 - 2 * rings;
+                    int bot_s0r0 = bot_s1r0 - 2 * rings;
+
+                    if (s == 0)
+                    {
+                        top_s0r1 += vertexCount - 2;
+                        top_s0r0 += vertexCount - 2;
+                        bot_s0r1 += vertexCount - 2;
+                        bot_s0r0 += vertexCount - 2;
+                    }
+
+                    // Create cap triangles
+                    if (r == 1)
+                    {
+                        indices[3 * ti + 0] = (uint)topCapIndex;
+                        indices[3 * ti + 1] = (uint)top_s0r1;
+                        indices[3 * ti + 2] = (uint)top_s1r1;
+                        ti++;
+
+                        indices[3 * ti + 0] = (uint)bottomCapIndex;
+                        indices[3 * ti + 1] = (uint)bot_s1r1;
+                        indices[3 * ti + 2] = (uint)bot_s0r1;
+                        ti++;
+                    }
+                    else
+                    {
+                        indices[3 * ti + 0] = (uint)top_s1r0;
+                        indices[3 * ti + 1] = (uint)top_s0r0;
+                        indices[3 * ti + 2] = (uint)top_s1r1;
+                        ti++;
+
+                        indices[3 * ti + 0] = (uint)top_s0r0;
+                        indices[3 * ti + 1] = (uint)top_s0r1;
+                        indices[3 * ti + 2] = (uint)top_s1r1;
+                        ti++;
+
+                        indices[3 * ti + 0] = (uint)bot_s0r1;
+                        indices[3 * ti + 1] = (uint)bot_s0r0;
+                        indices[3 * ti + 2] = (uint)bot_s1r1;
+                        ti++;
+
+                        indices[3 * ti + 0] = (uint)bot_s0r0;
+                        indices[3 * ti + 1] = (uint)bot_s1r0;
+                        indices[3 * ti + 2] = (uint)bot_s1r1;
+                        ti++;
+                    }
+                }
+
+                // Create side triangles
+                int top_s1 = vi - 2;
+                int top_s0 = top_s1 - 2 * rings;
+                int bot_s1 = vi - 1;
+                int bot_s0 = bot_s1 - 2 * rings;
+                
+                if (s == 0)
+                {
+                    top_s0 += vertexCount - 2;
+                    bot_s0 += vertexCount - 2;
+                }
+
+                indices[3 * ti + 0] = (uint)top_s0;
+                indices[3 * ti + 1] = (uint)bot_s1;
+                indices[3 * ti + 2] = (uint)top_s1;
+                ti++;
+
+                indices[3 * ti + 0] = (uint)bot_s0;
+                indices[3 * ti + 1] = (uint)bot_s1;
+                indices[3 * ti + 2] = (uint)top_s0;
+                ti++;
+            }
+
+            SetScale(vertices, scale);
+            Mesh mesh = new Mesh(vertices, indices, true);
+            mesh.Generate();
+            return mesh;
+        }
+
         public static Mesh CreateTerrain(uint width, uint height, Vector3 scale)
         {
             width += 1;
@@ -687,6 +891,22 @@ namespace Gowtu
             Mesh mesh = new Mesh(verts, idx, false); //Do not generate normals as they all face up already
             mesh.Generate();
             return mesh;
+        }
+
+        private static Vector3 PointOnSpheroid(float radius, float height, float horizontalAngle, float verticalAngle)
+        {
+            float horizontalRadians = MathHelper.DegreesToRadians(horizontalAngle);
+            float verticalRadians = MathHelper.DegreesToRadians(verticalAngle);
+            float cosVertical = (float)Math.Cos(verticalRadians);
+
+            return new Vector3( radius * (float)Math.Sin(horizontalRadians) * cosVertical,
+                                height * (float)Math.Sin(verticalRadians),
+                                radius * (float)Math.Cos(horizontalRadians) * cosVertical);
+        }
+
+        private static Vector3 PointOnSphere(float radius, float horizontalAngle, float verticalAngle)
+        {
+            return PointOnSpheroid(radius, radius, horizontalAngle, verticalAngle);
         }
     }
 }

@@ -445,7 +445,8 @@ namespace GowtuApp
             {
                 var properties = particleSystem.Properties;
                 properties.colorBegin = new Color(0.1f, 0.1f, 0.1f, 0.5f);
-                particleSystem.Emit(1, properties);
+                properties.lifeTime = 2.0f;
+                particleSystem.Emit(8, properties);
             }
         }
 

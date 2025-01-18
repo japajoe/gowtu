@@ -381,6 +381,110 @@ namespace Gowtu
             return false;
         }
 
+        public static bool SphereCast(Vector3 origin, float radius, Vector3 direction, out RaycastHit hit, float maxDistance = float.PositiveInfinity, Layer layerMask = 0)
+        {
+            hit = new RaycastHit();
+
+            TriangleIntersection intersection = new TriangleIntersection();
+
+            Renderer renderer = null;
+            int currentIndex = 0;
+
+            while((renderer = Graphics.GetRendererByIndex(currentIndex++)) != null)
+            {
+                if(!renderer.gameObject.isActive)
+                    continue;
+
+                Layer layer = (Layer)renderer.gameObject.layer;
+
+                if(layer.HasFlag(Layer.IgnoreRaycast))
+                        continue;
+
+                if(layerMask != 0)
+                {
+                    if(layer.HasFlag(layerMask))
+                        continue;
+                }
+
+                Transform transform = renderer.transform;
+                Matrix4 transformation = transform.GetModelMatrix();
+                Ray ray = new Ray(transform.WorldToLocal(origin), transform.WorldToLocalVector(direction), float.MaxValue);
+                Vector3 sphereCenter = origin + (direction * maxDistance);
+
+                Mesh mesh = null;
+                int meshIndex = 0;
+                
+                while((mesh = renderer.GetMesh(meshIndex++)) != null)
+                {
+                    var indices = mesh.Indices;
+                    
+                    if(indices.Length == 0)
+                        continue;
+
+                    var bounds = mesh.Bounds;
+
+                    float distance = 0;
+                    
+                    if(!bounds.Intersects(ray, out distance))
+                        continue;
+                    
+                    var vertices = mesh.Vertices;
+
+                    for(int j = 0; j < indices.Length / 3; j++)
+                    {
+                        Vector3 currIntersectionPos = Vector3.Zero;
+
+                        Vector3 v1 = vertices[(int)indices[j * 3]].position;
+                        Vector3 v2 = vertices[(int)indices[j * 3 + 1]].position;
+                        Vector3 v3 = vertices[(int)indices[j * 3 + 2]].position;
+
+                        Vector4 v1t = new Vector4(v1.X, v1.Y, v1.Z, 1.0f) * transformation;
+                        Vector4 v2t = new Vector4(v2.X, v2.Y, v2.Z, 1.0f) * transformation;
+                        Vector4 v3t = new Vector4(v3.X, v3.Y, v3.Z, 1.0f) * transformation;
+
+                        v1 = new Vector3(v1t.X, v1t.Y, v1t.Z);
+                        v2 = new Vector3(v2t.X, v2t.Y, v2t.Z);
+                        v3 = new Vector3(v3t.X, v3t.Y, v3t.Z);
+
+                        if (SphereIntersectsTriangle(sphereCenter, radius, v1, v2, v3, out currIntersectionPos))
+                        {
+                            distance = Vector3.Distance(origin, currIntersectionPos);
+
+                            if (distance < intersection.lastPos)
+                            {
+                                intersection.lastPos = distance;
+                                intersection.lastPosition = currIntersectionPos;
+                                intersection.triangleIndex1 = indices[j*3];
+                                intersection.triangleIndex2 = indices[j*3+1];
+                                intersection.triangleIndex3 = indices[j*3+2];
+                                intersection.transform = renderer.transform;
+                                hit.normal = SurfaceNormalFromIndices(v1, v2, v3);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(intersection.triangleIndex1 >= 0)
+            {
+                float totalDistance = Vector3.Distance(origin, origin + (direction * intersection.lastPos));
+
+                if(totalDistance <= maxDistance)
+                {
+                    //hit.point = origin + (direction * intersection.lastPos);
+                    hit.point = intersection.lastPosition;
+                    hit.distance = Vector3.Distance(origin, hit.point);
+                    hit.triangleIndex1 = intersection.triangleIndex1;
+                    hit.triangleIndex2 = intersection.triangleIndex2;
+                    hit.triangleIndex3 = intersection.triangleIndex3;
+                    hit.transform = intersection.transform;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static bool RayIntersectsTriangle(Vector3 origin, Vector3 dir, Vector3 v0, Vector3 v1, Vector3 v2, out float intersection)
         {
             intersection = 0;
@@ -430,13 +534,66 @@ namespace Gowtu
 
             if (t > epsilon)
             {
-                // Triangle interesected
+                // Triangle intersected
                 intersection = t;
                 return true;
             }
 
             // No intersection
             return false;
+        }
+
+        public static bool SphereIntersectsTriangle(Vector3 sphereCenter, float sphereRadius, Vector3 v0, Vector3 v1, Vector3 v2, out Vector3 intersectionPoint)
+        {
+            intersectionPoint = Vector3.Zero;
+
+            // Calculate the normal of the triangle
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+            Vector3 normal = Vector3.Normalize(Vector3.Cross(edge1, edge2));
+
+            // Find the distance from the sphere center to the plane of the triangle
+            float distanceToPlane = Vector3.Dot(normal, sphereCenter - v0);
+
+            // Check if the sphere is too far from the triangle plane
+            if (Math.Abs(distanceToPlane) > sphereRadius)
+            {
+                return false; // No intersection
+            }
+
+            // Project the sphere center onto the plane of the triangle
+            Vector3 closestPointOnPlane = sphereCenter - normal * distanceToPlane;
+
+            // Check if the closest point is inside the triangle
+            if(PointInTriangle(closestPointOnPlane, v0, v1, v2))
+            {
+                intersectionPoint = closestPointOnPlane;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool PointInTriangle(Vector3 p, Vector3 v0, Vector3 v1, Vector3 v2)
+        {
+            // Barycentric coordinates
+            Vector3 v2v0 = v2 - v0;
+            Vector3 v2v1 = v2 - v1;
+            Vector3 v0p = p - v0;
+            Vector3 v1p = p - v1;
+
+            float d00 = Vector3.Dot(v2v0, v2v0);
+            float d01 = Vector3.Dot(v2v0, v2v1);
+            float d11 = Vector3.Dot(v2v1, v2v1);
+            float d20 = Vector3.Dot(v0p, v2v0);
+            float d21 = Vector3.Dot(v1p, v2v1);
+
+            float denom = d00 * d11 - d01 * d01;
+            float v = (d11 * d20 - d01 * d21) / denom;
+            float w = (d00 * d21 - d01 * d20) / denom;
+
+            // Check if point is inside the triangle
+            return (v >= 0) && (w >= 0) && (v + w <= 1);
         }
 
         private static Vector3 SurfaceNormalFromIndices(Vector3 pA, Vector3 pB, Vector3 pC)
@@ -455,6 +612,7 @@ namespace Gowtu
         public uint triangleIndex2;
         public uint triangleIndex3;
         public float lastPos;
+        public Vector3 lastPosition;
         public Vector3 normal;
 
         public TriangleIntersection()
@@ -465,6 +623,7 @@ namespace Gowtu
             triangleIndex2 = 0;
             triangleIndex3 = 0;
             lastPos = float.MaxValue;
+            lastPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
             normal = Vector3.Zero;
         }
     }

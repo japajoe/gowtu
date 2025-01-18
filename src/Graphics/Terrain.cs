@@ -294,6 +294,31 @@ namespace Gowtu
             return true;
         }
 
+        public float[] GetHeights()
+        {
+            float[] heights = new float[mesh.Vertices.Length];
+
+            for(int i = 0; i < mesh.Vertices.Length; i++)
+            {
+                heights[i] = mesh.Vertices[i].position.Y;
+            }
+
+            return heights;
+        }
+
+        public void SetHeights(float[] heights)
+        {
+            if(heights.Length != mesh.Vertices.Length)
+                return;
+
+            for(int i = 0; i < mesh.Vertices.Length; i++)
+            {
+                mesh.Vertices[i].position.Y = heights[i];
+            }
+
+            Update();
+        }
+
         public bool GetVertexAtPoint(int x, int y, out Vector3 position)
         {
             int width = (int)resolution.X;

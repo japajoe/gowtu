@@ -152,16 +152,51 @@ namespace Gowtu
             return m;
         }
 
+        // public bool WorldToScreenPoint(Vector3 pointInWorld, out Vector2 screenPoint)
+        // {
+        //     var v = new OpenTK.Mathematics.Vector4(pointInWorld.X, pointInWorld.Y, pointInWorld.Z, 1);            
+        //     var pointInNdc = v * GetViewMatrix() * GetProjectionMatrix();
+        //     var viewport = Graphics.GetViewport();
+        //     pointInNdc.Xyz /= pointInNdc.W;
+        //     float screenX = (pointInNdc.X + 1) / 2f * viewport.width;
+        //     float screenY = (1 - pointInNdc.Y) / 2f * viewport.height;
+        //     screenPoint = new Vector2(screenX, screenY);
+        //     return pointInNdc.Z < 1.0f;
+        // }
+
         public bool WorldToScreenPoint(Vector3 pointInWorld, out Vector2 screenPoint)
         {
-            var v = new OpenTK.Mathematics.Vector4(pointInWorld.X, pointInWorld.Y, pointInWorld.Z, 1);            
-            var pointInNdc = v * GetViewMatrix() * GetProjectionMatrix();
-            var viewport = Graphics.GetViewport();
-            pointInNdc.Xyz /= pointInNdc.W;
-            float screenX = (pointInNdc.X + 1) / 2f * viewport.width;
-            float screenY = (1 - pointInNdc.Y) / 2f * viewport.height;
-            screenPoint = new Vector2(screenX, screenY);
-            return pointInNdc.Z < 1.0f;
+            var v = new OpenTK.Mathematics.Vector4(pointInWorld.X, pointInWorld.Y, pointInWorld.Z, 1);
+            
+            // Correct order of multiplication: first view, then projection
+            var viewMatrix = GetViewMatrix();
+            var projectionMatrix = GetProjectionMatrix();
+            var pointInClipSpace = v * viewMatrix * projectionMatrix;
+
+            // Convert to NDC
+            if (pointInClipSpace.W != 0)
+            {
+                var pointInNdc = new OpenTK.Mathematics.Vector4(
+                    pointInClipSpace.X / pointInClipSpace.W,
+                    pointInClipSpace.Y / pointInClipSpace.W,
+                    pointInClipSpace.Z / pointInClipSpace.W,
+                    1.0f
+                );
+
+                var viewport = Graphics.GetViewport();
+                
+                // Check if the point is within the valid range
+                if (pointInNdc.Z >= 0.0f && pointInNdc.Z <= 1.0f)
+                {
+                    float screenX = (pointInNdc.X + 1) / 2f * viewport.width;
+                    float screenY = (1 - pointInNdc.Y) / 2f * viewport.height;
+                    screenPoint = new Vector2(screenX, screenY);
+                    return true; // Point is visible
+                }
+            }
+
+            screenPoint = Vector2.Zero; // Default value if not visible
+            return false; // Point is not visible
         }
 
         public bool ScreenToWorldPoint(Vector2 screenPoint, out Vector3 worldPoint)

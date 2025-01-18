@@ -27,6 +27,7 @@ namespace Gowtu
 {
     public enum PrimitiveType
     {
+        Capsule,
         Cube,
         Plane,
         ParticleSystem,
@@ -239,6 +240,17 @@ namespace Gowtu
 
             switch(type)
             {
+                case PrimitiveType.Capsule:
+                {
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshCapsule));
+                    var material = new DiffuseMaterial();
+                    var renderer = g.AddComponent<MeshRenderer>();
+                    renderer.Add(mesh, material);
+                    var settings = renderer.GetSettings(0);
+                    settings.cullFace = true;
+                    settings.depthTest = true;
+                    break;
+                }
                 case PrimitiveType.Cube:
                 {
                     var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshCube));
@@ -252,7 +264,7 @@ namespace Gowtu
                 }
                 case PrimitiveType.Plane:
                 {
-                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshPlane));                    
+                    var mesh = Resources.FindMesh(Constants.GetString(ConstantString.MeshPlane));
                     var material = new DiffuseMaterial();
                     var renderer = g.AddComponent<MeshRenderer>();
                     renderer.Add(mesh, material);

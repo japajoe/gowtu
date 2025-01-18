@@ -59,6 +59,8 @@ namespace Gowtu
     {
         public static WindowResizeEvent Resize;
 
+        private static FrameBufferObject fbo;
+        private static FullScreenQuad screenQuad;
         private static Viewport viewport = new Viewport(0, 0, 512, 512);
         private static List<Renderer> renderers = new List<Renderer>();
         private static PriorityQueue<Renderer, uint> renderQueue = new PriorityQueue<Renderer, uint>();
@@ -75,6 +77,12 @@ namespace Gowtu
 
         internal static void Initialize()
         {
+            fbo = new FrameBufferObject(512, 512);
+            screenQuad = new FullScreenQuad();
+
+            fbo.Generate();
+            screenQuad.Generate();
+
             CreateResources();
             
             GameObject camera = new GameObject();
@@ -107,6 +115,7 @@ namespace Gowtu
             var diffuseInstancedShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDiffuseInstanced), DiffuseInstancedShader.Create());
             var particleShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderParticle), ParticleShader.Create());
 
+            Resources.AddMesh(Constants.GetString(ConstantString.MeshCapsule), MeshGenerator.CreateCapsule(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshCube), MeshGenerator.CreateCube(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshPlane), MeshGenerator.CreatePlane(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshQuad), MeshGenerator.CreateQuad(Vector3.One));
@@ -174,6 +183,11 @@ namespace Gowtu
 
         internal static void NewFrame()
         {
+            //fbo.Bind();
+
+            
+            Clear();
+
             UpdateUniformBuffers();
 
             if(Camera.mainCamera == null)
@@ -182,18 +196,16 @@ namespace Gowtu
             }
             else
             {
-                if(!suspend3DPass)
-                {
-                    RenderShadowPass();
-                    Render3DPass();
-                }
-                else
-                {
-                    Clear();
-                }
+                RenderShadowPass();
+                Render3DPass();
             }
+
+            //fbo.Unbind();
+            
+            //screenQuad.Render(fbo);
             
             Render2DPass();
+
         }
 
         private static void Clear()
@@ -213,6 +225,9 @@ namespace Gowtu
 
         private static void RenderShadowPass()
         {
+            if(suspend3DPass)
+                return;
+
             for(int i = 0; i < renderers.Count; i++)
             {
                 renderQueue.Enqueue(renderers[i], renderers[i].renderQueue);
@@ -241,7 +256,8 @@ namespace Gowtu
 
         private static void Render3DPass()
         {
-            Clear();
+            if(suspend3DPass)
+                return;
 
             for(int i = 0; i < renderers.Count; i++)
             {
@@ -268,6 +284,7 @@ namespace Gowtu
 
         internal static void SetViewport(int x, int y, int width, int height)
         {
+            fbo.Resize(width, height);
             viewport = new Viewport(x, y, width, height);
             GL.Viewport(x, y, width, height);
             Resize?.Invoke(x, y, width, height);
