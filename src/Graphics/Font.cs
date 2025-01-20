@@ -304,6 +304,11 @@ namespace Gowtu
             if(size == 0)
                 return;
 
+            if(characterIndex > text.Length)
+                characterIndex = text.Length;
+
+            Debug.Log("Text length: {0}, character index: {1}", text.Length, characterIndex);
+
             float startPosX = x;
             float startPosY = y;
             float characterPosX = x;

@@ -22,6 +22,7 @@ This is a C# framework for making simple games and other graphical applications.
 - [FreeTypeSharp](https://www.nuget.org/packages/JAJ.Packages.FreeTypeSharp/)
 - [ImGui.NET](https://www.nuget.org/packages/ImGui.NET)
 - [StbImageSharp](https://www.nuget.org/packages/StbImageSharp)
+- [AssimpNet](https://www.nuget.org/packages/AssimpNet)
 
 # Examples
 ![Example 1](images/Example1.png)

@@ -28,6 +28,7 @@
     <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.4" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="ImGui.NET" Version="1.89.7.1" />
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>

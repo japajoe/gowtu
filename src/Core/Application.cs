@@ -167,7 +167,7 @@ namespace Gowtu
 
             if(!string.IsNullOrEmpty(version))
             {
-                Console.WriteLine("OpenGL Version: " + version);
+                Debug.Log("OpenGL Version: " + version);
             }
 
             GLFW.SetFramebufferSizeCallback(window, OnWindowResize);
@@ -178,8 +178,6 @@ namespace Gowtu
             GLFW.SetScrollCallback(window, OnMouseScroll);
 
             OnInitialize();
-
-
 
             GLFW.ShowWindow(window);
 

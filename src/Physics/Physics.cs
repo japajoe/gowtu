@@ -164,8 +164,6 @@ namespace Gowtu
             rigidBody.UserObject = rb;
             rb.SetRigidBody(rigidBody);
             rigidbodyInfo.Add(rbInfo);
-
-            System.Console.WriteLine("Added to physics world: " + rb.instanceId);
         }
 
         internal static void Remove(Rigidbody rb)

@@ -448,6 +448,18 @@ namespace GowtuApp
                 properties.lifeTime = 2.0f;
                 particleSystem.Emit(8, properties);
             }
+
+            Span<Vector3> lines = stackalloc Vector3[6];
+            lines[0] = Vector3.Zero;
+            lines[1] = new Vector3(1000, 0, 0);
+            lines[2] = Vector3.Zero;
+            lines[3] = new Vector3(0, 1000, 0);
+            lines[4] = Vector3.Zero;
+            lines[5] = new Vector3(0, 0, -1000);
+
+            Debug.DrawLine(lines[0], lines[1], Color.Red);
+            Debug.DrawLine(lines[2], lines[3], Color.Green);
+            Debug.DrawLine(lines[4], lines[5], Color.Blue);
         }
 
         private void OnGUI()

@@ -42,19 +42,19 @@ namespace Gowtu
         {
             if(shaders.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[SHADER] can't add {0} with ID: {1} because it already exists", name, shader.Id));
+                Debug.Log(string.Format("[SHADER] can't add {0} with ID: {1} because it already exists", name, shader.Id));
                 return null;
             }
 
             if(shader.Id == 0)
             {
-                Console.WriteLine(string.Format("[SHADER] can't add {0} because it's not initialized", name));
+                Debug.Log(string.Format("[SHADER] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             shaders[name] = shader;
 
-            Console.WriteLine("[SHADER] {0} added with ID: {1}", name, shader.Id);
+            Debug.Log("[SHADER] {0} added with ID: {1}", name, shader.Id);
             
             return shaders[name];
         }
@@ -63,19 +63,19 @@ namespace Gowtu
         {
             if(textures.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[TEXTURE] can't add {0} with ID: {1} because it already exists", name, texture.Id));
+                Debug.Log(string.Format("[TEXTURE] can't add {0} with ID: {1} because it already exists", name, texture.Id));
                 return null;
             }
 
             if(texture.Id == 0)
             {
-                Console.WriteLine(string.Format("[TEXTURE] can't add {0} because it's not initialized", name));
+                Debug.Log(string.Format("[TEXTURE] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             textures[name] = texture;
 
-            Console.WriteLine("[TEXTURE] {0} added with ID: {1}", name, texture.Id);
+            Debug.Log("[TEXTURE] {0} added with ID: {1}", name, texture.Id);
             
             return textures[name];
         }
@@ -84,19 +84,19 @@ namespace Gowtu
         {
             if(meshes.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[MESH] can't add {0} with ID: {1} because it already exists", name, mesh.VAO.Id));
+                Debug.Log(string.Format("[MESH] can't add {0} with ID: {1} because it already exists", name, mesh.VAO.Id));
                 return null;
             }
 
             if(mesh.VAO.Id == 0)
             {
-                Console.WriteLine(string.Format("[MESH] can't add {0} because it's not initialized", name));
+                Debug.Log(string.Format("[MESH] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             meshes[name] = mesh;
 
-            Console.WriteLine("[MESH] {0} added with ID: {1}", name, mesh.VAO.Id);
+            Debug.Log("[MESH] {0} added with ID: {1}", name, mesh.VAO.Id);
             
             return meshes[name];
         }
@@ -105,19 +105,19 @@ namespace Gowtu
         {
             if(fonts.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[FONT] can't add {0} with ID: {1} because it already exists", name, font.TextureId));
+                Debug.Log(string.Format("[FONT] can't add {0} with ID: {1} because it already exists", name, font.TextureId));
                 return null;
             }
 
             if(font.TextureId == 0)
             {
-                Console.WriteLine(string.Format("[FONT] can't add {0} because it's not initialized", name));
+                Debug.Log(string.Format("[FONT] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             fonts[name] = font;
 
-            Console.WriteLine("[FONT] {0} added with ID: {1}", name, font.TextureId);
+            Debug.Log("[FONT] {0} added with ID: {1}", name, font.TextureId);
             
             return fonts[name];
         }
@@ -126,13 +126,13 @@ namespace Gowtu
         {
             if(audioClips.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[AUDIOCLIP] can't add {0} with ID: {1} because it already exists", name, audioClip.GetHashCode()));
+                Debug.Log(string.Format("[AUDIOCLIP] can't add {0} with ID: {1} because it already exists", name, audioClip.GetHashCode()));
                 return null;
             }
 
             audioClips[name] = audioClip;
 
-            Console.WriteLine("[AUDIOCLIP] {0} added with ID: {1}", name, audioClip.GetHashCode());
+            Debug.Log("[AUDIOCLIP] {0} added with ID: {1}", name, audioClip.GetHashCode());
             
             return audioClips[name];
         }
@@ -141,19 +141,19 @@ namespace Gowtu
         {
             if(uniformBuffers.ContainsKey(name))
             {
-                Console.WriteLine(string.Format("[UNIFORMBUFFER] can't add {0} with ID: {1} because it already exists", name, ubo.Id));
+                Debug.Log(string.Format("[UNIFORMBUFFER] can't add {0} with ID: {1} because it already exists", name, ubo.Id));
                 return null;
             }
 
             if(ubo.Id == 0)
             {
-                Console.WriteLine(string.Format("[UNIFORMBUFFER] can't add {0} because it's not initialized", name));
+                Debug.Log(string.Format("[UNIFORMBUFFER] can't add {0} because it's not initialized", name));
                 return null;
             }
 
             uniformBuffers[name] = ubo;
 
-            Console.WriteLine("[UNIFORMBUFFER] {0} added with ID: {1}", name, ubo.Id);
+            Debug.Log("[UNIFORMBUFFER] {0} added with ID: {1}", name, ubo.Id);
             
             return uniformBuffers[name];
         }
@@ -212,7 +212,7 @@ namespace Gowtu
             
             if(shader != null)
             {
-                Console.WriteLine("[SHADER] {0} removed with ID: {1}", name, shader.Id);
+                Debug.Log("[SHADER] {0} removed with ID: {1}", name, shader.Id);
                 shader.Delete();
                 shaders.Remove(name);
             }
@@ -224,7 +224,7 @@ namespace Gowtu
             
             if(texture != null)
             {
-                Console.WriteLine("[TEXTURE] {0} removed with ID: {1}", name, texture.Id);
+                Debug.Log("[TEXTURE] {0} removed with ID: {1}", name, texture.Id);
                 texture.Delete();
                 textures.Remove(name);
             }
@@ -236,7 +236,7 @@ namespace Gowtu
             
             if(mesh != null)
             {
-                Console.WriteLine("[MESH] {0} removed with ID: {1}", name, mesh.VAO.Id);
+                Debug.Log("[MESH] {0} removed with ID: {1}", name, mesh.VAO.Id);
                 mesh.Delete();
                 meshes.Remove(name);
             }
@@ -248,7 +248,7 @@ namespace Gowtu
             
             if(font != null)
             {
-                Console.WriteLine("[FONT] {0} removed with ID: {1}", name, font.TextureId);
+                Debug.Log("[FONT] {0} removed with ID: {1}", name, font.TextureId);
                 font.Delete();
                 fonts.Remove(name);
             }
@@ -260,7 +260,7 @@ namespace Gowtu
             
             if(audioClip != null)
             {
-                Console.WriteLine("[AUDIOCLIP] {0} removed with ID: {1}", name, audioClip.GetHashCode());
+                Debug.Log("[AUDIOCLIP] {0} removed with ID: {1}", name, audioClip.GetHashCode());
                 audioClip.Dispose();
                 audioClips.Remove(name);
             }
@@ -272,7 +272,7 @@ namespace Gowtu
             
             if(ubo != null)
             {
-                Console.WriteLine("[UNIFORMBUFFER] {0} removed with ID: {1}", name, ubo.Id);
+                Debug.Log("[UNIFORMBUFFER] {0} removed with ID: {1}", name, ubo.Id);
                 ubo.Delete();
                 uniformBuffers.Remove(name);
             }
@@ -330,7 +330,7 @@ namespace Gowtu
         {
             if(!System.IO.File.Exists(pathToAssetPack))
             {
-                System.Console.WriteLine("The file does not exist: " + pathToAssetPack);
+                Debug.Log("The file does not exist: " + pathToAssetPack);
                 return;
             }
 
@@ -400,7 +400,7 @@ namespace Gowtu
         {
             if(!System.IO.File.Exists(pathToAssetPack))
             {
-                System.Console.WriteLine("The file does not exist: " + pathToAssetPack);
+                Debug.Log("The file does not exist: " + pathToAssetPack);
                 return;
             }
 

@@ -97,6 +97,17 @@ namespace Gowtu
             m_objects.Add(this);
         }
 
+        public GameObject(string name) : base()
+        {
+            this.name = name;
+            m_transform = new Transform();
+            m_transform.SetGameObject(this);
+            m_components = new List<Component>();
+            m_isActive = true;
+            m_layer = 0;
+            m_objects.Add(this);
+        }
+
         ~GameObject()
         {
             for(int i = 0; i < m_components.Count; i++)

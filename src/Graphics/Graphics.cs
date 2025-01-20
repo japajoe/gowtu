@@ -272,6 +272,8 @@ namespace Gowtu
                     renderer.OnRender();
                 }
             }
+
+            LineRenderer.OnRender();
         }
 
         private static void Render2DPass()
