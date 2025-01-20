@@ -224,7 +224,7 @@ namespace Gowtu
             info.viewProjection = info.view * info.projection;
             info.position = new Vector4(camera.transform.position, 1.0f);
 
-            ReadOnlySpan<UniformCameraInfo> s = new ReadOnlySpan<UniformCameraInfo>(info);
+            ReadOnlySpan<UniformCameraInfo> s = new ReadOnlySpan<UniformCameraInfo>(ref info);
             ubo.BufferSubData<UniformCameraInfo>(s, 0);
 
             ubo.Unbind();

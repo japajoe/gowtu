@@ -304,10 +304,13 @@ namespace Gowtu
 
             using(var fileStream = OpenStream(name, data))
             {
-                fileStream.Read(buffer, 0, sizeof(ushort));
+                if(fileStream.Read(buffer, 0, sizeof(ushort)) != sizeof(ushort))
+                    return AssetPackStatus.FileNotFound;
                 ushort checksumA = BinaryConverter.ToUInt16(buffer, 0, ByteOrder.BigEndian);
 
-                fileStream.Read(buffer, 0, sizeof(int));
+                if(fileStream.Read(buffer, 0, sizeof(int)) != sizeof(int))
+                    return AssetPackStatus.FileNotFound;
+                    
                 int headerSize = BinaryConverter.ToInt32(buffer, 0, ByteOrder.BigEndian);
 
                 byte[] header = new byte[headerSize];
@@ -591,6 +594,7 @@ namespace Gowtu
         ChecksumError,
         FileExists,
         FileNotFound,
+        ReadError,
         Ok
     }
 

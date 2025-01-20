@@ -241,7 +241,7 @@ namespace Gowtu
                     info.isActive = 0;
                 }
 
-                ReadOnlySpan<UniformLightInfo> s = new ReadOnlySpan<UniformLightInfo>(info);
+                ReadOnlySpan<UniformLightInfo> s = new ReadOnlySpan<UniformLightInfo>(ref info);
                 m_ubo.BufferSubData<UniformLightInfo>(s, i * Marshal.SizeOf<UniformLightInfo>());
             }
 

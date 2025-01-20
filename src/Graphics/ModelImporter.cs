@@ -1,5 +1,6 @@
 using Assimp;
 using OpenTK.Mathematics;
+using System;
 using System.IO;
 
 namespace Gowtu
@@ -42,13 +43,16 @@ namespace Gowtu
 
     public static class ModelImporter
     {
-        public static GameObject LoadFromFile(string filepath, ModelImporterFlags flags, Vector3 scale, bool flipYZ)
+        public static GameObject LoadFromFile(string filepath, ModelImporterFlags flags = ModelImporterFlags.None, Vector3 scale = default(Vector3))
         {
             if(!File.Exists(filepath))
             {
                 Debug.Log("Error loading model: file does not exist: " + filepath);
                 return null;
             }
+
+            if(scale == Vector3.Zero)
+                scale = Vector3.One;
 
             AssimpContext importer = new AssimpContext();
 
@@ -69,12 +73,53 @@ namespace Gowtu
 
             GameObject model = new GameObject();
 
-            ProcessNode(model, scene.RootNode, scene, scale, flipYZ);
+            ProcessNode(model, scene.RootNode, scene, scale);
 
             return model;
         }
 
-        private static void ProcessNode(GameObject parent, Node node, Scene scene, Vector3 scale, bool flipYZ)
+        public static unsafe GameObject LoadFromMemory(ReadOnlySpan<byte> data, ModelImporterFlags flags = ModelImporterFlags.None, Vector3 scale = default(Vector3))
+        {
+            if(data == null)
+            {
+                Debug.Log("Error loading model: data is null");
+                return null;
+            }
+
+            if(scale == Vector3.Zero)
+                scale = Vector3.One;
+
+            fixed(byte* pData = &data[0])
+            {
+                using(UnmanagedMemoryStream stream = new UnmanagedMemoryStream(pData, data.Length))
+                {
+                    AssimpContext importer = new AssimpContext();
+
+                    PostProcessSteps postProcessFlags = (PostProcessSteps)flags;
+                    var scene = importer.ImportFileFromStream(stream, postProcessFlags);
+
+                    if(scene == null)
+                    {
+                        Debug.Log("Error loading model");
+                        return null;
+                    }
+
+                    if(scene.SceneFlags.HasFlag(SceneFlags.Incomplete))
+                    {
+                        Debug.Log("Error loading model: model is incomplete");
+                        return null;
+                    }
+
+                    GameObject model = new GameObject();
+
+                    ProcessNode(model, scene.RootNode, scene, scale);
+
+                    return model;
+                }
+            }
+        }
+
+        private static void ProcessNode(GameObject parent, Node node, Scene scene, Vector3 scale)
         {
             var transformation = ToMatrix4(node.Transform);
             parent.transform.position = transformation.ExtractTranslation() * scale;
@@ -104,14 +149,6 @@ namespace Gowtu
                         var nrm = aMesh.Normals[j];
                         var uv = aMesh.TextureCoordinateChannels[0][j];
 
-                        if(flipYZ)
-                        {
-                            float y = pos.Z;
-                            float z = pos.Y;
-                            pos.Y = y;
-                            pos.Z = z;
-                        }
-
                         vertices[j].position = new Vector3(pos.X, pos.Y, pos.Z) * scale;
                         vertices[j].normal = new Vector3(nrm.X, nrm.Y, nrm.Z);
                         vertices[j].uv = new Vector2(uv.X, uv.Y);
@@ -123,14 +160,6 @@ namespace Gowtu
                     {
                         var pos = aMesh.Vertices[j];
                         var nrm = aMesh.Normals[j];
-
-                        if(flipYZ)
-                        {
-                            float y = pos.Z;
-                            float z = pos.Y;
-                            pos.Y = y;
-                            pos.Z = z;
-                        }
 
                         vertices[j].position = new Vector3(pos.X, pos.Y, pos.Z) * scale;
                         vertices[j].normal = new Vector3(nrm.X, nrm.Y, nrm.Z);
@@ -165,7 +194,7 @@ namespace Gowtu
             {
                 var child = new GameObject(node.Children[i].Name);
                 child.transform.SetParent(parent.transform);
-                ProcessNode(child, node.Children[i], scene, scale, flipYZ);
+                ProcessNode(child, node.Children[i], scene, scale);
             }
         }
 

@@ -167,7 +167,7 @@ namespace Gowtu
             }
 
             m_ubo.Bind();
-            ReadOnlySpan<UniformShadowInfo> s = new ReadOnlySpan<UniformShadowInfo>(shadowData);
+            ReadOnlySpan<UniformShadowInfo> s = new ReadOnlySpan<UniformShadowInfo>(ref shadowData);
             m_ubo.BufferSubData<UniformShadowInfo>(s, 0);
             m_ubo.Unbind();
         }

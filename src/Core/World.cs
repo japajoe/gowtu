@@ -105,7 +105,7 @@ namespace Gowtu
             info.fogEnabled = fogEnabled ? 1 : 0;
             info.time = Time.Elapsed;
 
-            ReadOnlySpan<UniformWorldInfo> s = new ReadOnlySpan<UniformWorldInfo>(info);
+            ReadOnlySpan<UniformWorldInfo> s = new ReadOnlySpan<UniformWorldInfo>(ref info);
             ubo.BufferSubData<UniformWorldInfo>(s, 0);
 
             ubo.Unbind();
