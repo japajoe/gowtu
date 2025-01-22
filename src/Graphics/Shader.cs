@@ -41,6 +41,29 @@ namespace Gowtu
             }
         }
 
+        public Shader(string computeSource)
+        {
+            computeSource = AddIncludes(computeSource);
+
+            int computeShader = Compile(computeSource, ShaderType.ComputeShader);
+
+            if(computeShader > 0)
+            {
+                id = GL.CreateProgram();
+                
+                GL.AttachShader(id, computeShader);
+                GL.LinkProgram(id);
+
+                if(GL.GetProgrami(id, ProgramPropertyARB.LinkStatus) == 0)
+                {
+                    GL.GetProgramInfoLog(id, out string info);
+                    Console.WriteLine(info);
+                }
+
+                GL.DeleteShader(computeShader);
+            }
+        }
+
         public Shader(string vertexSource, string fragmentSource)
         {
             vertexSource = AddIncludes(vertexSource);
@@ -255,6 +278,9 @@ namespace Gowtu
             {
                 GL.GetShaderInfoLog(shader, out string info);
                 Console.WriteLine(type.ToString() + " " + info);
+                Console.WriteLine("=====");
+                Console.WriteLine(source);
+                Console.WriteLine("=====");
                 return 0;
             }
             return shader;

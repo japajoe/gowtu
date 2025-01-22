@@ -139,6 +139,11 @@ namespace Gowtu
                 textureId = 0;
             }
         }
+
+        public float GetPixelScale(float fontSize)
+        {
+            return fontSize / (float)pixelSize;
+        }
         
         private bool LoadFromFile(string filepath)
         {

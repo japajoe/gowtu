@@ -44,6 +44,7 @@ namespace Gowtu
         private static int indiceCount;
         private static List<Vertex2D> vertexBufferTemp; //Temporary buffer used by some 'add' functions with dynamic size requirements
         private static List<uint> indexBufferTemp; //Temporary buffer used by some 'add' functions with dynamic size requirements
+        private static List<TextColorInfo> textColorInfoTemp;
         private static GLStateInfo glState;
         private static int numDrawCalls;
 
@@ -73,6 +74,7 @@ namespace Gowtu
             indiceCount = 0;
             vertexBufferTemp = new List<Vertex2D>();
             indexBufferTemp = new List<uint>();
+            textColorInfoTemp = new List<TextColorInfo>();
             numDrawCalls = 0;
 
             CreateBuffers();
@@ -619,7 +621,7 @@ namespace Gowtu
             if (count == 0) 
                 return;
 
-            if (segments == null) 
+            if (segments.IsEmpty) 
                 return;
 
             int requiredVertices = count * 4; // 4 vertices per line
@@ -689,7 +691,7 @@ namespace Gowtu
             if (valuesCount < 2) 
                 return;
 
-            if (data == null) 
+            if (data.IsEmpty) 
                 return;
 
             int count = valuesCount - 1;
@@ -839,10 +841,68 @@ namespace Gowtu
             AddVertices(command);
         }
 
-        public static void AddText(Vector2 position, Font font, string text, float fontSize, Color color, Rectangle clippingRect = default(Rectangle)) 
+        private struct TextColorInfo
+        {
+            public int index;
+            public Color color;
+        }
+
+        private static void ParseColorsFromText(ref string text, List<TextColorInfo> colors, ref int count)
+        {
+            int pos = 0;
+            int textLength = text.Length;
+
+            while (pos < textLength)
+            {
+                // Find the opening brace
+                int start = text.IndexOf('{', pos);
+                if (start == -1) break;
+
+                // Find the closing brace
+                int end = text.IndexOf('}', start);
+                if (end == -1) break;
+
+                // Extract the color code
+                string colorCode = text.Substring(start + 1, end - start - 1);
+                
+                // Validate the length of the color code
+                if (colorCode.Length == 8)
+                {
+                    float r = Convert.ToInt32(colorCode.Substring(0, 2), 16) / 255f;
+                    float g = Convert.ToInt32(colorCode.Substring(2, 2), 16) / 255f;
+                    float b = Convert.ToInt32(colorCode.Substring(4, 2), 16) / 255f;
+                    float a = Convert.ToInt32(colorCode.Substring(6, 2), 16) / 255f;
+
+                    // Color buffer needs to have more capacity at this point
+                    if(count > colors.Count)
+                        CheckTemporaryBuffer(colors, 1);
+
+                    if (count < colors.Count)
+                        colors[count++] = new TextColorInfo { index = start, color = new Color(r, g, b, a) };
+                }
+
+                // Erase the color code from the text
+                text = text.Remove(start, end - start + 1);
+
+                // Update position
+                pos = start; // Stay at the same position to check for more colors
+                textLength = text.Length; // Update text length
+            }
+        }
+
+        public static void AddText(Vector2 position, Font font, string text, float fontSize, Color color, bool richText, Rectangle clippingRect = default(Rectangle)) 
         {
             if(font == null || string.IsNullOrEmpty(text))
                 return;
+
+            int colorCount = 0;
+
+            if(richText) {
+                if(text.Contains("{") && text.Contains("}"))
+                {
+                    ParseColorsFromText(ref text, textColorInfoTemp, ref colorCount);
+                }
+            }
 
             int requiredVertices = text.Length * 4; // 4 vertices per character
             int requiredIndices = text.Length * 6; // 6 indices per character
@@ -855,6 +915,8 @@ namespace Gowtu
             
             int vertexIndex = 0;
             int indiceIndex = 0;
+            int colorIndex = 0;
+            Color currentColor = color;
             
             Vector2 pos = new Vector2(position.X, position.Y);
             pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
@@ -897,10 +959,19 @@ namespace Gowtu
                     new Vector2(glyph.u1,  glyph.v0)
                 };
 
-                vertexBufferTemp[vertexIndex+0] = new Vertex2D(new Vector2(glyphVertices[0].X, glyphVertices[0].Y), glyphTextureCoords[0], color);
-                vertexBufferTemp[vertexIndex+1] = new Vertex2D(new Vector2(glyphVertices[1].X, glyphVertices[1].Y), glyphTextureCoords[1], color);
-                vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], color);
-                vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], color);
+                if(colorCount > 0) 
+                {
+                    if (colorIndex < colorCount && textColorInfoTemp[colorIndex].index == i) 
+                    {
+                        currentColor = textColorInfoTemp[colorIndex].color; // Update to the new color
+                        colorIndex++; // Move to the next color
+                    }
+                }
+
+                vertexBufferTemp[vertexIndex+0] = new Vertex2D(new Vector2(glyphVertices[0].X, glyphVertices[0].Y), glyphTextureCoords[0], currentColor);
+                vertexBufferTemp[vertexIndex+1] = new Vertex2D(new Vector2(glyphVertices[1].X, glyphVertices[1].Y), glyphTextureCoords[1], currentColor);
+                vertexBufferTemp[vertexIndex+2] = new Vertex2D(new Vector2(glyphVertices[2].X, glyphVertices[2].Y), glyphTextureCoords[2], currentColor);
+                vertexBufferTemp[vertexIndex+3] = new Vertex2D(new Vector2(glyphVertices[3].X, glyphVertices[3].Y), glyphTextureCoords[3], currentColor);
 
                 indexBufferTemp[indiceIndex+0] = (uint)(0 + vertexIndex); // Bottom-right
                 indexBufferTemp[indiceIndex+1] = (uint)(2 + vertexIndex); // Top-left
@@ -1086,7 +1157,7 @@ namespace Gowtu
             }
         }
 
-        private static void CheckTemporaryIndexBuffer(int numRequiredIndices) 
+        private static void CheckTemporaryIndexBuffer(int numRequiredIndices)
         {
             if(indexBufferTemp.Count < numRequiredIndices) 
             {
@@ -1098,6 +1169,21 @@ namespace Gowtu
                 }
 
                 indexBufferTemp.Resize(newSize);
+            }
+        }
+
+        private static void CheckTemporaryBuffer<T>(List<T> buffer, int numRequiredItems)
+        {
+            if(buffer.Count < numRequiredItems) 
+            {
+                int newSize = buffer.Count * 2;
+            
+                while(newSize < numRequiredItems) 
+                {
+                    newSize *= 2;
+                }
+
+                buffer.Resize(newSize);
             }
         }
 
@@ -1161,6 +1247,7 @@ namespace Gowtu
             const uint sizeItems = 1024;
             const uint sizeVertices = 2 << 15;
             const uint sizeIndices = 2 << 15;
+            const uint sizeTextColors = 128;
 
             for(uint i = 0; i < sizeItems; i++)
             {
@@ -1177,6 +1264,11 @@ namespace Gowtu
             {
                 indices.Add(0);
                 indexBufferTemp.Add(0);                
+            }
+
+            for(uint i = 0; i < sizeTextColors; i++)
+            {
+                textColorInfoTemp.Add(new TextColorInfo());
             }
 
             GL.GenVertexArrays(1, ref VAO);

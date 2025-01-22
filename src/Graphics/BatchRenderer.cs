@@ -126,7 +126,7 @@ namespace Gowtu
             if(mesh == null)
                 return;
 
-            if(mesh.Vertices == null)
+            if(mesh.Vertices.IsEmpty)
                 return;
 
             m_mesh = mesh;

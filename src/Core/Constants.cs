@@ -57,6 +57,8 @@ namespace Gowtu
                     return "ProceduralSkybox";
                 case ConstantString.ShaderSkybox:
                     return "Skybox";
+                case ConstantString.ShaderWater:
+                    return "Water";
                 case ConstantString.ShaderTerrain:
                     return "Terrain";
                 case ConstantString.TextureDefault:
@@ -95,6 +97,7 @@ namespace Gowtu
         ShaderProceduralSkybox,
         ShaderSkybox,
         ShaderTerrain,
+        ShaderWater,
         TextureDefault,
         TextureDefaultCubeMap,
         TextureDepth,

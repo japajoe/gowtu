@@ -114,6 +114,7 @@ namespace Gowtu
             var depthShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDepth), DepthShader.Create());
             var diffuseInstancedShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderDiffuseInstanced), DiffuseInstancedShader.Create());
             var particleShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderParticle), ParticleShader.Create());
+            var waterShader = Resources.AddShader(Constants.GetString(ConstantString.ShaderWater), WaterShader.Create());
 
             Resources.AddMesh(Constants.GetString(ConstantString.MeshCapsule), MeshGenerator.CreateCapsule(Vector3.One));
             Resources.AddMesh(Constants.GetString(ConstantString.MeshCube), MeshGenerator.CreateCube(Vector3.One));
@@ -134,6 +135,7 @@ namespace Gowtu
             BindShaderToUniformBuffers(depthShader);
             BindShaderToUniformBuffers(diffuseInstancedShader);
             BindShaderToUniformBuffers(particleShader);
+            BindShaderToUniformBuffers(waterShader);
 
             Font font = new Font();
             if(font.LoadFromMemory(EmbeddedFont.data, EmbeddedFont.data.Length, 32, FontRenderMethod.SDF))
@@ -198,6 +200,7 @@ namespace Gowtu
             {
                 RenderShadowPass();
                 Render3DPass();
+                GameBehaviour.OnBehaviourRender();
             }
 
             //fbo.Unbind();

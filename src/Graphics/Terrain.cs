@@ -250,48 +250,41 @@ namespace Gowtu
             return mesh.Vertices[index].position.Y;
         }
 
+        private static float BaryCentric(Vector3 p1, Vector3 p2, Vector3 p3, Vector2 pos) 
+        {
+            float det = (p2.Z - p3.Z) * (p1.X - p3.X) + (p3.X - p2.X) * (p1.Z - p3.Z);
+            float l1 = (p2.Z - p3.Z) * (pos.X - p3.X) + (p3.X - p2.X) * (pos.Y - p3.Z) / det;
+            float l2 = (p3.Z - p1.Z) * (pos.X - p3.X) + (p1.X - p3.X) * (pos.Y - p3.Z) / det;
+            float l3 = 1.0f - l1 - l2;
+            return l1 * p1.Y + l2 * p2.Y + l3 * p3.Y;
+        }
+
         public bool GetHeightAtPosition(Vector3 position, out float height)
         {
             height = 0.0f;
-            Mesh mesh = GetMesh(0);
-            
-            if(mesh == null)
-                return false;
-                
-            if(WorldToTerrainPoint(position, out Vector2 terrainPoint))
+
+            if(!WorldToTerrainPoint(position, out Vector2 terrainPoint))
                 return false;
 
-            Vector3 origin = position + new Vector3(0, 100000, 0);
-            Vector3 direction = Vector3.UnitY * -100000.0f;
+            int terrainX = (int)terrainPoint.X;
+            int terrainZ = (int)terrainPoint.Y;
 
-            int x = (int)terrainPoint.X;
-            int y = (int)terrainPoint.Y;
-            int triangleIndex = x * y * 6;
+            int width = (int)(resolution.X - 0);
+            int depth = (int)(resolution.Y - 0);
 
-            var p1 = mesh.Vertices[triangleIndex+0].position;
-            var p2 = mesh.Vertices[triangleIndex+1].position;
-            var p3 = mesh.Vertices[triangleIndex+2].position;
+            float coordX = (float)((float)terrainX % width) / width;
+            float coordZ = (float)((float)terrainZ % depth) / depth;
 
-            var p4 = mesh.Vertices[triangleIndex+3].position;
-            var p5 = mesh.Vertices[triangleIndex+4].position;
-            var p6 = mesh.Vertices[triangleIndex+5].position;
+            if(coordX <= 1.0f - coordZ)
+            {
+                //Left triangle
+            }
+            else
+            {
+                //Right triangle
+            }
 
-            bool hasIntersection = false;
-
-            if(Physics.RayIntersectsTriangle(origin, direction, p1, p2, p3, out float t1))
-                hasIntersection = true;
-
-            if(Physics.RayIntersectsTriangle(origin, direction, p4, p5, p6, out float t2))
-                hasIntersection = true;
-
-            if(!hasIntersection)
-                return false;
-
-            float distance = Math.Min(t1, t2);
-            Vector3 hitpoint = origin + (direction * distance);
-
-            height = hitpoint.Y;
-            return true;
+            return false;
         }
 
         public float[] GetHeights()

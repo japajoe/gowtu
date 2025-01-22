@@ -31,7 +31,8 @@ namespace Gowtu
     {
         Directional = 0,
         Point = 1,
-    };
+        Spot
+    }
 
     public sealed class Light : Component
     {
@@ -44,6 +45,7 @@ namespace Gowtu
         private float m_constant;
         private float m_linear;
         private float m_quadratic;
+        private float m_cutoff; //spotlight
         private Color m_color;
         private Color m_ambient;
         private Color m_diffuse;
@@ -122,6 +124,18 @@ namespace Gowtu
             set
             {
                 m_specular = value;
+            }
+        }
+
+        public float Cutoff
+        {
+            get
+            {
+                return m_cutoff;
+            }
+            set
+            {
+                m_cutoff = value;
             }
         }
 
@@ -227,8 +241,8 @@ namespace Gowtu
                     info.linear = light.m_linear;
                     info.quadratic = light.m_quadratic;
                     info.strength = light.m_strength;
+                    info.cutoff = light.m_cutoff;
                     info.padding1 = 0;
-                    info.padding2 = 0;
                     info.position = new Vector4(light.gameObject.transform.position, 1.0f);
                     info.direction = new Vector4(light.gameObject.transform.forward, 1.0f);
                     info.color = light.m_color;
@@ -258,8 +272,8 @@ namespace Gowtu
         public float linear;       //4
         public float quadratic;    //4
         public float strength;     //4
+        public float cutoff;       //4
         public float padding1;     //4
-        public float padding2;     //4
         public Vector4 position;   //16
         public Vector4 direction;  //16
         public Color color;        //16

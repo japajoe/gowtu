@@ -36,7 +36,7 @@ struct LightInfo {
     float linear;       //4
     float quadratic;    //4
     float strength;     //4
-    float padding1;     //4
+    float cutoff;       //4
     float padding2;     //4
     vec4 position;      //16
     vec4 direction;     //16
@@ -189,9 +189,6 @@ vec3 calculate_lighting(vec3 fragPosition, vec3 cameraPosition, vec3 normal, vec
     vec3 lightDirection = normalize(uLights.lights[0].direction.xyz);
     float shadow = calculate_shadow(fragPosition, uCamera.view, normal, lightDirection);
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * texColor.rgb * diffuseColor.rgb;
-    
-    //vec3 lighting = (ambient * (diffuse + specular)) * texColor.rgb * diffuseColor.rgb;
-    
     return lighting;
 }
 

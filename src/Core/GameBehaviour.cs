@@ -224,6 +224,15 @@ namespace Gowtu
             }
         }
 
+        internal static void OnBehaviourRender()
+        {
+            for(int i = 0; i < behaviours.Count; i++)
+            {
+                if(behaviours[i].GameObject.isActive)
+                    behaviours[i].OnRender();
+            }
+        }
+
         internal static void OnBehaviourCollision(Rigidbody rb1, Rigidbody rb2)
         {
             for(int i = 0; i < behaviours.Count; i++)
