@@ -52,7 +52,8 @@ namespace GowtuApp
                 "Resources/Textures/billboardgrass0002.png",
                 "Resources/Textures/RedFlower.png",
                 "Resources/Textures/YellowFlower.png",
-                "Resources/Textures/smoke_04.png"
+                "Resources/Textures/smoke_04.png",
+                "Resources/Textures/Water.jpg"
             };
 
             var fontBatch = new List<string>()
@@ -132,7 +133,7 @@ namespace GowtuApp
 
             var perlin = new Perlin();
             float frequency = 0.1f;
-            float amplitude = 10.0f;
+            float amplitude = 35.0f;
 
             for(int y = 0; y < terrain.Resolution.Y + 1; y++)
             {
@@ -165,20 +166,13 @@ namespace GowtuApp
             terrainMaterial.UvScale3 = new Vector2(uvScaleX, uvScaleY);
             terrainMaterial.UvScale4 = new Vector2(uvScaleX / 5.0f, uvScaleY / 5.0f);
 
-            var rb1 = plane.AddComponent<Rigidbody>();
-            rb1.mass = 0;
-            var collider = plane.AddComponent<MeshCollider>();
-            collider.mesh = terrain.GetMesh(0);
-
-            var testCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            testCube.GetComponent<MeshRenderer>().GetMaterial<DiffuseMaterial>(0).DiffuseTexture = Resources.FindTexture<Texture2D>("Resources/Textures/Box.jpg");
-            testCube.AddComponent<CollisionTester>();
-            var rb2 = testCube.AddComponent<Rigidbody>();
-            rb2.mass = 10;
-            var boxCollider = testCube.AddComponent<BoxCollider>();
-            boxCollider.size = new Vector3(1, 1, 1);
-            rb2.MovePosition(new Vector3(0, 100, 0));
-
+            var water = GameObject.CreatePrimitive(PrimitiveType.Water);
+            water.transform.scale = new Vector3(10, 1, 10);
+            water.transform.position -= new Vector3(terrainSize.X / 2, 0, -1.0f * (terrainSize.Y / 2));
+            var waterMaterial = water.GetComponent<MeshRenderer>().GetMaterial<WaterMaterial>(0);
+            waterMaterial.DiffuseTexture = new Texture2D(new Image("Resources/Textures/Water.jpg"));
+            waterMaterial.UVScale = new Vector2(100, 100);
+            waterMaterial.DiffuseColor = new Color(1.0f, 1.0f, 1.0f, 0.7f);
         }
 
         private void SetupObjects()
@@ -477,17 +471,6 @@ namespace GowtuApp
 
             World.FogColor = lightEnabled ? fogColorDay : fogColorNight;
             skyboxMaterial.DiffuseColor = lightEnabled ? Color.White : fogColorNight;
-        }
-    }
-
-    public class CollisionTester : GameBehaviour
-    {
-        private void OnCollision(Rigidbody rb1, Rigidbody rb2)
-        {
-            // rb1.MovePosition(new Vector3(0, 5, -5));
-            // rb1.MoveRotation(Quaternion.Identity);
-            // rb1.velocity = Vector3.Zero;
-            // rb1.angularVelocity = Vector3.Zero;
         }
     }
 }

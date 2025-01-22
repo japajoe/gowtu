@@ -35,7 +35,8 @@ namespace Gowtu
         Skybox,
         Quad,
         Sphere,
-        Terrain
+        Terrain,
+        Water
     }
 
     [Flags]
@@ -347,6 +348,18 @@ namespace Gowtu
                 case PrimitiveType.Terrain:
                 {
                     g.AddComponent<Terrain>();
+                    break;
+                }
+                case PrimitiveType.Water:
+                {
+                    var mesh = MeshGenerator.CreateTerrain(128, 128, OpenTK.Mathematics.Vector3.One);
+                    var material = new WaterMaterial();
+                    var renderer = g.AddComponent<MeshRenderer>();
+                    renderer.Add(mesh, material);
+                    var settings = renderer.GetSettings(0);
+                    settings.cullFace = true;
+                    settings.depthTest = true;
+                    settings.alphaBlend = true;
                     break;
                 }
             }

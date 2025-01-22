@@ -57,20 +57,14 @@ vec3 gerstner(vec3 vertex, vec2 direction, float time, float speed, float steepn
 }
 
 void main() {
-    //vec3 pos = aPosition;
-
     vec3 pos = gerstner(aPosition, normalize(uDirection), uWorld.time, uSpeed, uSteepness, uAmplitude, uWaveLength);
-
-    //float distance = length(pos - origin);
-    //pos.y = sin(distance / 12.0 + uWorld.time) * 2.0;
-    vec4 position = vec4(pos, 1.0);
     
     vs_out.normal = aNormal;
     vs_out.uv = aUV;
     vs_out.fragPosition = vec3(uModel * vec4(pos, 1.0));
     vs_out.mvp = uMVP;
 
-    gl_Position = position;    
+    gl_Position = vec4(pos, 1.0);
 }";
 
         public static readonly string geometrySource = @"#version 330 core
@@ -140,7 +134,7 @@ void main() {
         lighting = mix(uWorld.fogColor.rgb, lighting, visibility);
     }
 
-    FragColor = gamma_correction(vec4(lighting, texColor.a));
+    FragColor = gamma_correction(vec4(lighting, texColor.a * uDiffuseColor.a));
 }";
 
         internal static Shader Create()

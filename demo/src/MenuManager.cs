@@ -245,7 +245,7 @@ namespace GowtuApp
             var viewport = Graphics.GetViewport();
             position.X = viewport.width - size.X - position.X;
             position.Y = viewport.height - size.Y - position.Y;
-            Graphics2D.AddText(position, font, text, fontSize, color);
+            Graphics2D.AddText(position, font, text, fontSize, color, false);
         }
 
         private void SetCursor()
