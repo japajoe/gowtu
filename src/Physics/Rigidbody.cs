@@ -172,7 +172,6 @@ namespace Gowtu
 
         public Rigidbody() : base()
         {
-            
         }
 
         internal override void OnInitializeComponent()

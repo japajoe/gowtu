@@ -206,7 +206,7 @@ namespace Gowtu
         {
             if(AudioSettings.Load("audiosettings.dat"))
             {
-                var deviceInfo = new MiniAudioEx.DeviceInfo(IntPtr.Zero, AudioSettings.DeviceId);
+                var deviceInfo = new MiniAudioEx.DeviceInfo(IntPtr.Zero, (int)AudioSettings.DeviceId, true);
                 Audio.Initialize(AudioSettings.OutputSampleRate, 2, deviceInfo);
             }
             else

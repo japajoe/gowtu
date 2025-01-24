@@ -217,7 +217,7 @@ namespace Gowtu
             {
                 IntPtr elementPtr = IntPtr.Add(pDevices, (int)i * Marshal.SizeOf<ma_ex_device_info>());
                 ma_ex_device_info deviceInfo = Marshal.PtrToStructure<ma_ex_device_info>(elementPtr);
-                devices[i] = new DeviceInfo(deviceInfo.pName, deviceInfo.index);
+                devices[i] = new DeviceInfo(deviceInfo.pName, deviceInfo.index, deviceInfo.isDefault > 0 ? true : false);
             }
 
             Library.ma_ex_playback_devices_free(pDevices, count);

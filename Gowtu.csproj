@@ -7,7 +7,7 @@
     <PackageId>JAJ.Packages.Gowtu</PackageId>
     <Version>1.0.0</Version>
     <Authors>W.M.R Jap-A-Joe</Authors>
-    <PackageTags>GLFW OpenGL Rendering Graphics Game Audio MiniAudio MiniAUdioEx</PackageTags>
+    <PackageTags>GLFW OpenGL Rendering Graphics Game Audio MiniAudio MiniAudioEx</PackageTags>
     <Description>
       A simple library for game development.
     </Description>
@@ -23,9 +23,9 @@
   <ItemGroup>
     <PackageReference Include="JAJ.Packages.OpenTK5" Version="1.0.0" />
     <PackageReference Include="JAJ.Packages.GLFWNet" Version="1.0.3" />
-    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="1.7.7" />
-    <PackageReference Include="JAJ.Packages.BulletSharp" Version="1.0.1" />
-    <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.4" />
+    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="1.7.8" />
+    <PackageReference Include="JAJ.Packages.BulletSharp" Version="1.0.2" />
+    <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.5" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="ImGui.NET" Version="1.89.7.1" />
     <PackageReference Include="AssimpNet" Version="4.1.0" />

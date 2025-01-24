@@ -47,17 +47,33 @@ out VS_OUT {
     mat4 mvp;
 } vs_out;
 
-const vec3 origin = vec3(0, 0, 0);
+#define PI 3.14159265359
 
-vec3 gerstner(vec3 vertex, vec2 direction, float time, float speed, float steepness, float amplitude, float wavelength){
-	float displaced_x = vertex.x + (steepness/wavelength) * direction.x * cos(wavelength * dot(direction, vertex.xz) + speed * time);
-	float displaced_z = vertex.z + (steepness/wavelength) * direction.y * cos(wavelength * dot(direction, vertex.xz) + speed * time);
-	float displaced_y = vertex.y + amplitude * sin(wavelength * dot(direction, vertex.xz) + speed * time);
-	return vec3(displaced_x, displaced_y, displaced_z);
+//https://catlikecoding.com/unity/tutorials/flow/waves/
+vec3 gerstner_wave(vec3 point, vec2 direction, float steepness, float wavelength, float amplitude, float speed) {
+    float k = 2 * PI / wavelength;
+    float c = sqrt(9.8 / k);
+    vec2 d = normalize(direction);
+    float f = k * (dot(d, point.xz) - c * uWorld.time * speed);
+    float a = steepness / k;
+    
+    return vec3(d.x * (a * cos(f)), a * sin(f), d.y * (a * cos(f)));
 }
 
 void main() {
-    vec3 pos = gerstner(aPosition, normalize(uDirection), uWorld.time, uSpeed, uSteepness, uAmplitude, uWaveLength);
+    vec3 pos = aPosition;
+
+    vec2 directions[3];
+    directions[0] = normalize(uDirection);
+    directions[1] = vec2(0, 1);
+    directions[2] = vec2(1, 1);
+
+    for(int i = 0; i < 3; i++) {
+        float s = uSteepness + (i * uSteepness);
+        float w = uWaveLength + (i * uWaveLength);
+        float a = uAmplitude + (i * uAmplitude);
+        pos += gerstner_wave(pos, directions[i], s, w, a, uSpeed);
+    }
     
     vs_out.normal = aNormal;
     vs_out.uv = aUV;
@@ -96,7 +112,7 @@ void main() {
     vec3 normal = normalize(cross(edge1, edge2));
 
     for(int i = 0; i < 3; i++) {
-        gs_out.normal = normal;
+        gs_out.normal       = normal;
         gs_out.uv           = gs_in[i].uv;
         gs_out.fragPosition = gs_in[i].fragPosition;
         gl_Position = gs_in[i].mvp * vec4(gl_in[i].gl_Position.xyz, 1.0);

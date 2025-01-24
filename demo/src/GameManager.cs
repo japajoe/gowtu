@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Gowtu;
+using ImGuiNET;
 using MiniAudioEx.DSP;
 using OpenTK.Mathematics;
 
@@ -125,6 +126,8 @@ namespace GowtuApp
             directionalLight.transform.rotation = Quaternion.FromEulerAngles(x, 0, z);
         }
 
+        private WaterMaterial waterMaterial;
+
         private void SetupTerrain()
         {
             var plane = GameObject.CreatePrimitive(PrimitiveType.Terrain);
@@ -169,10 +172,14 @@ namespace GowtuApp
             var water = GameObject.CreatePrimitive(PrimitiveType.Water);
             water.transform.scale = new Vector3(10, 1, 10);
             water.transform.position -= new Vector3(terrainSize.X / 2, 0, -1.0f * (terrainSize.Y / 2));
-            var waterMaterial = water.GetComponent<MeshRenderer>().GetMaterial<WaterMaterial>(0);
-            waterMaterial.DiffuseTexture = new Texture2D(new Image("Resources/Textures/Water.jpg"));
+            waterMaterial = water.GetComponent<MeshRenderer>().GetMaterial<WaterMaterial>(0);
+            waterMaterial.DiffuseTexture = Resources.FindTexture<Texture2D>("Resources/Textures/Water.jpg");
             waterMaterial.UVScale = new Vector2(100, 100);
-            waterMaterial.DiffuseColor = new Color(1.0f, 1.0f, 1.0f, 0.7f);
+            waterMaterial.DiffuseColor = new Color(110, 110, 110, 185);
+            waterMaterial.Direction = new Vector2(1.0f, 1.0f);
+            waterMaterial.Steepness = 0.1f;
+            waterMaterial.WaveLength = 0.2f;
+            waterMaterial.Speed = 0.25f;
         }
 
         private void SetupObjects()
@@ -449,18 +456,47 @@ namespace GowtuApp
             if(!Loaded)
                 return;
 
-            ImGuiNET.ImGui.SetNextWindowPos(new System.Numerics.Vector2(5, 5));
+            ImGui.SetNextWindowPos(new System.Numerics.Vector2(5, 5));
             if(ImGuiEx.BeginWindow("Light", new System.Numerics.Vector2(128, 64)))
             {
-                if(ImGuiNET.ImGui.Checkbox("Toggle Light", ref lightEnabled))
+                if(ImGui.Checkbox("Toggle Light", ref lightEnabled))
                 {
                     ToggleLight(lightEnabled);
                 }
                 
-                ImGuiNET.ImGui.Text("FPS " + Time.FPS);
+                ImGui.Text("FPS " + Time.FPS);
 
                 ImGuiEx.EndWindow();
             }
+
+            // if(ImGui.Begin("Fog Settings"))
+            // {
+            //     float fogDensity = World.FogDensity;
+            //     if(ImGui.InputFloat("Density", ref fogDensity))
+            //     {
+            //         World.FogDensity = fogDensity;
+            //     }
+            // }
+
+            // float steepness = waterMaterial.Steepness;
+            // float waveLength = waterMaterial.WaveLength;
+            // Color c = waterMaterial.DiffuseColor;
+            // var color = new System.Numerics.Vector4(c.r, c.g, c.b, c.a);
+
+            // ImGuiNET.ImGui.Begin("Water");
+
+            // if(ImGuiNET.ImGui.InputFloat("Steepness", ref steepness))
+            //     waterMaterial.Steepness = steepness;
+
+            // if(ImGuiNET.ImGui.InputFloat("WaveLength", ref waveLength))
+            //     waterMaterial.WaveLength = waveLength;
+
+            // if(ImGuiNET.ImGui.ColorPicker4("Color", ref color))
+            // {
+            //     waterMaterial.DiffuseColor = new Color(color.X, color.Y, color.Z, color.W);
+            // }
+            
+            // ImGuiNET.ImGui.End();
         }
 
         private void ToggleLight(bool enabled)

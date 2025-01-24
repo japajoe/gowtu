@@ -223,6 +223,7 @@ namespace Gowtu
             info.projection = camera.GetProjectionMatrix();
             info.viewProjection = info.view * info.projection;
             info.position = new Vector4(camera.transform.position, 1.0f);
+            info.direction = new Vector4(camera.transform.forward, 1.0f);
 
             ReadOnlySpan<UniformCameraInfo> s = new ReadOnlySpan<UniformCameraInfo>(ref info);
             ubo.BufferSubData<UniformCameraInfo>(s, 0);
@@ -238,6 +239,7 @@ namespace Gowtu
         public Matrix4 projection;
         public Matrix4 viewProjection;
         public Vector4 position;
+        public Vector4 direction;
     }
 
     public struct Frustum
