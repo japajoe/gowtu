@@ -176,10 +176,18 @@ namespace GowtuApp
             waterMaterial.DiffuseTexture = Resources.FindTexture<Texture2D>("Resources/Textures/Water.jpg");
             waterMaterial.UVScale = new Vector2(100, 100);
             waterMaterial.DiffuseColor = new Color(110, 110, 110, 185);
-            waterMaterial.Direction = new Vector2(1.0f, 1.0f);
-            waterMaterial.Steepness = 0.1f;
-            waterMaterial.WaveLength = 0.2f;
-            waterMaterial.Speed = 0.25f;
+            waterMaterial.WaveCount = 3;
+
+            for(int i = 0; i < 3; i++)
+            {
+                float rx = Gowtu.Random.Range(-1.0f, 1.0f);
+                float ry = Gowtu.Random.Range(-1.0f, 1.0f);
+                waterMaterial.Waves[i].direction = new Vector2(rx, ry);
+                waterMaterial.Waves[i].amplitude = 1.0f + (i * 0.1f);
+                waterMaterial.Waves[i].steepness = 0.1f + (i * 0.5f);
+                waterMaterial.Waves[i].waveLength = 0.2f + (i * 0.2f);
+                waterMaterial.Waves[i].speed = 0.25f;
+            }
         }
 
         private void SetupObjects()

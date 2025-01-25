@@ -181,6 +181,7 @@ namespace Gowtu
 
             GLFW.ShowWindow(window);
 
+            OpenTK.Graphics.OpenGL.GL.Enable(OpenTK.Graphics.OpenGL.EnableCap.Multisample);
             OpenTK.Graphics.OpenGL.GL.Clear(OpenTK.Graphics.OpenGL.ClearBufferMask.ColorBufferBit);
             OpenTK.Graphics.OpenGL.GL.ClearColor(1, 1, 1, 1);
 

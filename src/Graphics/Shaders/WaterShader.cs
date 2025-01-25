@@ -31,14 +31,21 @@ layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aUV;
 
+#define MAX_WAVES 10
+
+struct Wave {
+    vec2 direction;
+    float steepness;
+    float waveLength;
+    float amplitude;
+    float speed;
+};
+
 uniform mat4 uModel;
 uniform mat3 uModelInverted;
 uniform mat4 uMVP;
-uniform vec2 uDirection = vec2(0.5, 0.3);
-uniform float uSpeed = 1.0;
-uniform float uSteepness = 0.1;
-uniform float uAmplitude = 1.0;
-uniform float uWaveLength = 5.0;
+uniform Wave uWaves[MAX_WAVES];
+uniform int uNumWaves;
 
 out VS_OUT {
     vec3 normal;
@@ -57,22 +64,19 @@ vec3 gerstner_wave(vec3 point, vec2 direction, float steepness, float wavelength
     float f = k * (dot(d, point.xz) - c * uWorld.time * speed);
     float a = steepness / k;
     
-    return vec3(d.x * (a * cos(f)), a * sin(f), d.y * (a * cos(f)));
+    return vec3(d.x * (a * cos(f)), a * sin(f), d.y * (a * cos(f))) * amplitude;
 }
 
 void main() {
     vec3 pos = aPosition;
 
-    vec2 directions[3];
-    directions[0] = normalize(uDirection);
-    directions[1] = vec2(0, 1);
-    directions[2] = vec2(1, 1);
-
-    for(int i = 0; i < 3; i++) {
-        float s = uSteepness + (i * uSteepness);
-        float w = uWaveLength + (i * uWaveLength);
-        float a = uAmplitude + (i * uAmplitude);
-        pos += gerstner_wave(pos, directions[i], s, w, a, uSpeed);
+    for(int i = 0; i < uNumWaves; i++) {
+        vec2 dir = normalize(uWaves[i].direction);
+        float st = uWaves[i].steepness;
+        float wl = uWaves[i].waveLength;
+        float am = uWaves[i].amplitude;
+        float sp = uWaves[i].speed;
+        pos += gerstner_wave(pos, dir, st, wl, am, sp);
     }
     
     vs_out.normal = aNormal;

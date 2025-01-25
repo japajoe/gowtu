@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -27,6 +28,24 @@ namespace Gowtu
 {
     public class WaterMaterial : Material
     {
+        private struct WaveUniform
+        {
+            public int direction;
+            public int steepness;
+            public int waveLength;
+            public int amplitude;
+            public int speed;
+        }
+
+        public struct Wave
+        {
+            public Vector2 direction;
+            public float steepness;
+            public float waveLength;
+            public float amplitude;
+            public float speed;
+        }
+
         private int uModel;
         private int uModelInverted;
         private int uMVP;
@@ -38,11 +57,9 @@ namespace Gowtu
         private int uUVOffset;
         private int uDepthMap;
         private int uReceiveShadows;
-        private int uDirection;
-        private int uSpeed;
-        private int uSteepness;
-        private int uAmplitude;
-        private int uWaveLength;
+        private const int MAX_WAVES = 10;
+        private WaveUniform[] uWaves;
+        private int uNumWaves;
 
         private Texture2D diffuseTexture;
         private Texture2DArray depthMap;
@@ -52,11 +69,8 @@ namespace Gowtu
         private Vector2 uvScale;
         private Vector2 uvOffset;
         private bool receiveShadows;
-        private Vector2 direction;
-        private float speed;
-        private float steepness;
-        private float amplitude;
-        private float waveLength;
+        private Wave[] waves;
+        private int numWaves;
 
         public Texture2D DiffuseTexture
         {
@@ -141,66 +155,37 @@ namespace Gowtu
             }
         }
 
-        public Vector2 Direction
+        public int WaveCount
         {
             get
             {
-                return direction;
+                return numWaves;
             }
             set
             {
-                direction = value;
+                numWaves = Math.Clamp(value, 1, MAX_WAVES);
             }
         }
 
-        public float Speed
+        public int MaxWaveCount
         {
             get
             {
-                return speed;
-            }
-            set
-            {
-                speed = value;
+                return MAX_WAVES;
             }
         }
 
-        public float Steepness
+        public Wave[] Waves
         {
             get
             {
-                return steepness;
+                return waves;
             }
             set
             {
-                steepness = value;
+                waves = value;
             }
         }
-
-        public float Amplitude
-        {
-            get
-            {
-                return amplitude;
-            }
-            set
-            {
-                amplitude = value;
-            }
-        }
-
-        public float WaveLength
-        {
-            get
-            {
-                return waveLength;
-            }
-            set
-            {
-                waveLength = value;
-            }
-        }
-
 
         public WaterMaterial() : base()
         {
@@ -213,11 +198,19 @@ namespace Gowtu
             uvScale = new Vector2(1, 1);
             uvOffset = new Vector2(0, 0);
             receiveShadows = true;
-            direction = new Vector2(0.5f, 0.3f);
-            speed = 1.0f;
-            steepness = 0.1f;
-            amplitude = 1.0f;
-            waveLength = 5.0f;
+            waves = new Wave[MAX_WAVES];
+            numWaves = 3;
+
+            for(int i = 0; i < waves.Length; i++)
+            {
+                float rx = Gowtu.Random.Range(-1.0f, 1.0f);
+                float ry = Gowtu.Random.Range(-1.0f, 1.0f);
+                waves[i].direction = new Vector2(rx, ry);
+                waves[i].amplitude = 1.0f;
+                waves[i].steepness = 0.1f + (i * 0.1f);
+                waves[i].waveLength = 0.2f + (i * 0.2f);
+                waves[i].speed = 0.25f;
+            }
 
             if(shader != null)
             {
@@ -232,11 +225,19 @@ namespace Gowtu
                 uUVOffset = GL.GetUniformLocation(shader.Id, "uUVOffset");
                 uDepthMap = GL.GetUniformLocation(shader.Id, "uDepthMap");
                 uReceiveShadows = GL.GetUniformLocation(shader.Id, "uReceiveShadows");
-                uDirection = GL.GetUniformLocation(shader.Id, "uDirection");
-                uSpeed = GL.GetUniformLocation(shader.Id, "uSpeed");
-                uSteepness = GL.GetUniformLocation(shader.Id, "uSteepness");
-                uAmplitude = GL.GetUniformLocation(shader.Id, "uAmplitude");
-                uWaveLength = GL.GetUniformLocation(shader.Id, "uWaveLength");
+
+                uWaves = new WaveUniform[MAX_WAVES];
+
+                for (int i = 0; i < uWaves.Length; ++i) 
+                {
+                    uWaves[i].direction = GL.GetUniformLocation(shader.Id, "uWaves[" + i + "].direction");
+                    uWaves[i].steepness = GL.GetUniformLocation(shader.Id, "uWaves[" + i + "].steepness");
+                    uWaves[i].waveLength = GL.GetUniformLocation(shader.Id, "uWaves[" + i + "].waveLength");
+                    uWaves[i].amplitude = GL.GetUniformLocation(shader.Id, "uWaves[" + i + "].amplitude");
+                    uWaves[i].speed = GL.GetUniformLocation(shader.Id, "uWaves[" + i + "].speed");
+                }
+
+                uNumWaves = GL.GetUniformLocation(shader.Id, "uNumWaves");
             }
         }
 
@@ -278,11 +279,16 @@ namespace Gowtu
             shader.SetFloat2(uUVScale, uvScale);
             shader.SetFloat2(uUVOffset, uvOffset);
             shader.SetInt(uReceiveShadows, receiveShadows ? 1 : 0);
-            shader.SetFloat2(uDirection, direction);
-            shader.SetFloat(uSpeed, speed);
-            shader.SetFloat(uSteepness, steepness);
-            shader.SetFloat(uAmplitude, amplitude);
-            shader.SetFloat(uWaveLength, waveLength);
+            shader.SetInt(uNumWaves, numWaves);
+
+            for(int i = 0; i < numWaves; i++)
+            {
+                shader.SetFloat2(uWaves[i].direction, waves[i].direction);
+                shader.SetFloat(uWaves[i].amplitude, waves[i].amplitude);
+                shader.SetFloat(uWaves[i].steepness, waves[i].steepness);
+                shader.SetFloat(uWaves[i].waveLength, waves[i].waveLength);
+                shader.SetFloat(uWaves[i].speed, waves[i].speed);
+            }
         }
     }
 }
