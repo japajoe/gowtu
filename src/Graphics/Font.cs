@@ -307,7 +307,7 @@ namespace Gowtu
             if(characterIndex > text.Length)
                 characterIndex = text.Length;
 
-            Debug.Log("Text length: {0}, character index: {1}", text.Length, characterIndex);
+            //Debug.Log("Text length: {0}, character index: {1}", text.Length, characterIndex);
 
             float startPosX = x;
             float startPosY = y;
@@ -357,6 +357,31 @@ namespace Gowtu
                 {
                     height = h;
                     yOffset = (glyph.bearingY - glyph.bottomBearing) * GetPixelScale(fontSize);
+                }
+            }
+
+            return yOffset;
+        }
+
+        public float CalculateYOffset(float fontSize)
+        {
+            float height = 0.0f;
+            float yOffset = 0.0f;
+
+            char newLine = '\n';
+            UInt32 newLineIndex = (newLine - m_codePointOfFirstChar);
+            
+            for(Int32 i = 0; i < m_glyphs.Count; i++) 
+            {
+                if(i == newLineIndex)
+                    continue;
+
+                float h = m_glyphs[i].bearingY;
+
+                if(h > height) 
+                {
+                    height = h;
+                    yOffset = (m_glyphs[i].bearingY - m_glyphs[i].bottomBearing) * GetPixelScale(fontSize);
                 }
             }
 

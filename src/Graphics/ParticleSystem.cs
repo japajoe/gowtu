@@ -846,7 +846,7 @@ namespace Gowtu
             Matrix4 scale = Matrix4.CreateScale(1, 1, 1);
             Matrix4 translation = Matrix4.CreateTranslation(0, 0, 0);
             Matrix4 rotation = Matrix4.CreateFromQuaternion(Quaternion.Identity);
-            matrix = scale * rotation * scale;
+            matrix = scale * rotation * translation;
             color = Color.White;
         }
     }

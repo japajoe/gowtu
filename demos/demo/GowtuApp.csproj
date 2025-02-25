@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Gowtu.csproj" />
+    <ProjectReference Include="../../Gowtu.csproj" />
   </ItemGroup>
 
   <ItemGroup>

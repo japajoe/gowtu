@@ -919,7 +919,8 @@ namespace Gowtu
             Color currentColor = color;
             
             Vector2 pos = new Vector2(position.X, position.Y);
-            pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
+            //pos.Y += font.CalculateYOffset(text, text.Length, fontSize);    
+            pos.Y += font.CalculateYOffset(fontSize);
             
             float originX = pos.X;
             float originY = pos.Y;
@@ -1577,6 +1578,11 @@ namespace Gowtu
         public bool IsZero() 
         {
             return x == 0.0f && y == 0.0f && width == 0.0f && height == 0.0f;
+        }
+
+        public bool Contains(Vector2 point)
+        {
+            return point.X >= x && point.X <= x + width && point.Y >= y && point.Y <= y + height;
         }
         
         public static Rectangle GetRectAtRowAndColumn(float leftIndent, float topIndent, float width, float height, int row, int column, int offsetX = 0, int offsetY = 0) 

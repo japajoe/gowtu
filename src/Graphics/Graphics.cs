@@ -59,8 +59,8 @@ namespace Gowtu
     {
         public static WindowResizeEvent Resize;
 
-        private static FrameBufferObject fbo;
-        private static FullScreenQuad screenQuad;
+        // private static FrameBufferObject fbo;
+        // private static FullScreenQuad screenQuad;
         private static Viewport viewport = new Viewport(0, 0, 512, 512);
         private static List<Renderer> renderers = new List<Renderer>();
         private static PriorityQueue<Renderer, uint> renderQueue = new PriorityQueue<Renderer, uint>();
@@ -77,11 +77,11 @@ namespace Gowtu
 
         internal static void Initialize()
         {
-            fbo = new FrameBufferObject(512, 512);
-            screenQuad = new FullScreenQuad();
+            // fbo = new FrameBufferObject(512, 512);
+            // screenQuad = new FullScreenQuad();
 
-            fbo.Generate();
-            screenQuad.Generate();
+            // fbo.Generate();
+            // screenQuad.Generate();
 
             CreateResources();
             
@@ -185,9 +185,6 @@ namespace Gowtu
 
         internal static void NewFrame()
         {
-            //fbo.Bind();
-
-            
             Clear();
 
             UpdateUniformBuffers();
@@ -199,13 +196,12 @@ namespace Gowtu
             else
             {
                 RenderShadowPass();
+                //fbo.Bind();
                 Render3DPass();
                 GameBehaviour.OnBehaviourRender();
+                //fbo.Unbind();
+                //screenQuad.Render(fbo);
             }
-
-            //fbo.Unbind();
-            
-            //screenQuad.Render(fbo);
             
             Render2DPass();
 
@@ -289,7 +285,7 @@ namespace Gowtu
 
         internal static void SetViewport(int x, int y, int width, int height)
         {
-            fbo.Resize(width, height);
+            //fbo.Resize(width, height);
             viewport = new Viewport(x, y, width, height);
             GL.Viewport(x, y, width, height);
             Resize?.Invoke(x, y, width, height);

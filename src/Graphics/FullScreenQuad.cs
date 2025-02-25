@@ -42,7 +42,8 @@ namespace Gowtu
         out vec4 FragColor;
 
         void main() {
-            FragColor = texture(uTexture, oTexCoord) * vec4(1, 0, 0, 1);
+            //FragColor = texture(uTexture, oTexCoord) * vec4(1, 0, 0, 1);
+            FragColor = vec4(1, 0, 0, 1);
         }";
 
         public FullScreenQuad()
@@ -103,7 +104,7 @@ namespace Gowtu
             }
 
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2d, frameBufferObject.TextureAttachmentId);
+            GL.BindTexture(TextureTarget.Texture2d, frameBufferObject.ColorTexture);
             shader.SetInt("uTexture", 0);
 
             vao.Bind();

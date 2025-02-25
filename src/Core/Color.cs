@@ -41,6 +41,14 @@ namespace Gowtu
             this.a = a;
         }
 
+        public Color(float r, float g, float b)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = 1.0f;
+        }
+
         public Color(int r, int g, int b, int a)
         {
             this.r = Normalize(r);

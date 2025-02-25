@@ -23,7 +23,7 @@
   <ItemGroup>
     <PackageReference Include="JAJ.Packages.OpenTK5" Version="1.0.0" />
     <PackageReference Include="JAJ.Packages.GLFWNet" Version="1.0.3" />
-    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="1.8.0" />
+    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="2.0.0" />
     <PackageReference Include="JAJ.Packages.BulletSharp" Version="1.0.2" />
     <PackageReference Include="JAJ.Packages.FreeTypeSharp" Version="3.0.5" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
@@ -32,10 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="**/demo/**" />
-    <Compile Remove="**/demo/**" />
-    <EmbeddedResource Remove="**/demo/**" />
-    <None Remove="**/demo/**" />
+    <Content Remove="**/demos/**" />
+    <Compile Remove="**/demos/**" />
+    <EmbeddedResource Remove="**/demos/**" />
+    <None Remove="**/demos/**" />
   </ItemGroup>
 
   <ItemGroup>
